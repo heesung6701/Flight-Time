@@ -33,6 +33,57 @@ test("filters excluded duties and keeps original aircraft type", () => {
   assert.equal(modified.at(-1).aircraftType, "TST5");
 });
 
+test("calculates F/O from duty using full F block time and two thirds NF block time", () => {
+  const modified = modifyRows([
+    {
+      aircraft: "TEST-F",
+      date: "2030-01-01",
+      duty: "F",
+      flightNo: "101",
+      from: "AAA",
+      to: "BBB",
+      type: "TST",
+      blockTime: 90,
+      night: 0,
+      inst: 0,
+      takeoff: 0,
+      landing: 0,
+    },
+    {
+      aircraft: "TEST-NF",
+      date: "2030-01-02",
+      duty: "NF",
+      flightNo: "102",
+      from: "BBB",
+      to: "CCC",
+      type: "TST",
+      blockTime: 90,
+      night: 0,
+      inst: 0,
+      takeoff: 0,
+      landing: 0,
+    },
+    {
+      aircraft: "TEST-R",
+      date: "2030-01-03",
+      duty: "R",
+      flightNo: "103",
+      from: "CCC",
+      to: "DDD",
+      type: "TST",
+      blockTime: 90,
+      night: 0,
+      inst: 0,
+      takeoff: 0,
+      landing: 0,
+    },
+  ]);
+
+  assert.equal(modified[0].fo, 90);
+  assert.equal(modified[1].fo, 60);
+  assert.equal(modified[2].fo, "");
+});
+
 test("classifies takeoff and landing across day and night cases", () => {
   assert.equal(specialFlightNo("0166"), true);
   assert.equal(specialFlightNo("729"), false);

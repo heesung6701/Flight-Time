@@ -162,6 +162,13 @@ export function filterRows(originalRows, excludedDuties = DEFAULT_EXCLUDED_DUTIE
   return originalRows.filter((row) => !excluded.has(row.duty.toUpperCase()));
 }
 
+export function calculateFoTime(row) {
+  const duty = row.duty.toUpperCase();
+  if (duty === "F") return row.blockTime || "";
+  if (duty === "NF") return row.blockTime ? Math.round(row.blockTime * (2 / 3)) : "";
+  return "";
+}
+
 export function modifyRows(originalRows, options = {}) {
   const pageSize = options.pageSize || DEFAULT_PAGE_SIZE;
   const excludedDuties = options.excludedDuties || DEFAULT_EXCLUDED_DUTIES;
@@ -188,7 +195,7 @@ export function modifyRows(originalRows, options = {}) {
       instApp: "",
       blockTime: row.blockTime || "",
       pic: "",
-      fo: row.duty.toUpperCase() === "F" ? row.blockTime || "" : "",
+      fo: calculateFoTime(row),
       otherPilot: "",
       simulator: "",
       flightInstructor: "",
