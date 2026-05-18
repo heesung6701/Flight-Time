@@ -1,5 +1,11 @@
 export const DEFAULT_PAGE_SIZE = 19;
+export const PAGE_SIZE_OPTIONS = [10, 19, 30, 50];
 export const DEFAULT_EXCLUDED_DUTIES = ["O", "EX", "2F"];
+
+export function normalizePageSize(value) {
+  const pageSize = Number(value);
+  return PAGE_SIZE_OPTIONS.includes(pageSize) ? pageSize : DEFAULT_PAGE_SIZE;
+}
 
 export function clean(value) {
   if (value === null || value === undefined) return "";

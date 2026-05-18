@@ -8,6 +8,7 @@ import {
   classifyNightDay,
   formatDuration,
   modifyRows,
+  normalizePageSize,
   parseOriginalRows,
   parseTsv,
   specialFlightNo,
@@ -66,6 +67,13 @@ test("builds output page totals and previous totals", () => {
   assert.equal(formatDuration(page2.pageTotal.fo), "04:06");
   assert.equal(formatDuration(page2.previousTotal.blockTime), "02:41");
   assert.equal(formatDuration(page2.newTotal.blockTime), "06:47");
+});
+
+test("normalizes selectable page sizes and falls back to the default", () => {
+  assert.equal(normalizePageSize("10"), 10);
+  assert.equal(normalizePageSize(30), 30);
+  assert.equal(normalizePageSize("999"), 19);
+  assert.equal(normalizePageSize("bad value"), 19);
 });
 
 test("builds validation report for upload harness", () => {

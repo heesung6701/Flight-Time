@@ -6,6 +6,7 @@ import {
   displayCount,
   formatDuration,
   modifyRows,
+  normalizePageSize,
   parseOriginalRows,
   parseTsv,
 } from "./src/core/flighttime-core.js";
@@ -14,6 +15,7 @@ const state = {
   originalRows: [],
   modifiedRows: [],
   currentPage: 1,
+  pageSize: DEFAULT_PAGE_SIZE,
 };
 
 const els = {
@@ -26,6 +28,7 @@ const els = {
   filteredCount: document.querySelector("#filteredCount"),
   pageCount: document.querySelector("#pageCount"),
   pageRange: document.querySelector("#pageRange"),
+  pageSizeSelect: document.querySelector("#pageSizeSelect"),
   pageInput: document.querySelector("#pageInput"),
   prevPage: document.querySelector("#prevPage"),
   nextPage: document.querySelector("#nextPage"),
@@ -65,22 +68,24 @@ function setLoaded(message) {
 }
 
 function buildModifiedRows() {
+  state.pageSize = normalizePageSize(state.pageSize);
   state.modifiedRows = modifyRows(state.originalRows, {
-    pageSize: DEFAULT_PAGE_SIZE,
+    pageSize: state.pageSize,
   });
-  const maxPage = Math.max(Math.ceil(state.modifiedRows.length / DEFAULT_PAGE_SIZE), 1);
+  const maxPage = Math.max(Math.ceil(state.modifiedRows.length / state.pageSize), 1);
   state.currentPage = Math.min(Math.max(state.currentPage, 1), maxPage);
 }
 
 function renderOutput() {
   buildModifiedRows();
   const report = buildValidationReport(state.originalRows);
-  const page = buildOutputPage(state.modifiedRows, state.currentPage, DEFAULT_PAGE_SIZE);
+  const page = buildOutputPage(state.modifiedRows, state.currentPage, state.pageSize);
 
   els.originalCount.textContent = report.originalCount;
   els.filteredCount.textContent = report.filteredCount;
   els.pageCount.textContent = page.maxPage;
   els.pageRange.textContent = `page in 1~${page.maxPage}`;
+  els.pageSizeSelect.value = String(state.pageSize);
   els.pageInput.max = Math.max(page.maxPage, 1);
   els.pageInput.value = page.page;
   els.startNo.textContent = page.start ?? "-";
@@ -194,8 +199,14 @@ function handlePaste() {
 }
 
 function changePage(nextPage) {
-  const maxPage = Math.max(Math.ceil(state.modifiedRows.length / DEFAULT_PAGE_SIZE), 1);
+  const maxPage = Math.max(Math.ceil(state.modifiedRows.length / state.pageSize), 1);
   state.currentPage = Math.min(Math.max(nextPage, 1), maxPage);
+  renderOutput();
+}
+
+function changePageSize(nextPageSize) {
+  state.pageSize = normalizePageSize(nextPageSize);
+  state.currentPage = 1;
   renderOutput();
 }
 
@@ -213,5 +224,6 @@ els.parsePasteButton.addEventListener("click", handlePaste);
 els.printButton.addEventListener("click", () => window.print());
 els.prevPage.addEventListener("click", () => changePage(state.currentPage - 1));
 els.nextPage.addEventListener("click", () => changePage(state.currentPage + 1));
+els.pageSizeSelect.addEventListener("change", () => changePageSize(els.pageSizeSelect.value));
 els.pageInput.addEventListener("change", () => changePage(Number(els.pageInput.value || 1)));
 renderOutput();
