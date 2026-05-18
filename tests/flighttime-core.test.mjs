@@ -1,0 +1,88 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import test from "node:test";
+
+import {
+  buildOutputPage,
+  buildValidationReport,
+  classifyNightDay,
+  formatDuration,
+  modifyRows,
+  parseOriginalRows,
+  parseTsv,
+  specialFlightNo,
+} from "../src/core/flighttime-core.js";
+
+const fixture = fs.readFileSync(new URL("./fixtures/original-sample.tsv", import.meta.url), "utf8");
+const testConfig = [
+  { aircraft: "TEST001", type: "TST1" },
+  { aircraft: "TEST002", type: "TST2" },
+  { aircraft: "TEST003", type: "TST3" },
+  { aircraft: "TEST004", type: "TST4" },
+  { aircraft: "TEST005", type: "TST5" },
+];
+
+test("parses original rows and removes summary rows", () => {
+  const rows = parseOriginalRows(parseTsv(fixture));
+
+  assert.equal(rows.length, 5);
+  assert.equal(rows[0].duty, "O");
+  assert.equal(rows.at(-1).aircraft, "TEST005");
+});
+
+test("filters excluded duties and maps aircraft config", () => {
+  const originalRows = parseOriginalRows(parseTsv(fixture));
+  const modified = modifyRows(originalRows, testConfig);
+
+  assert.equal(modified.length, 4);
+  assert.equal(modified[0].aircraftType, "TST2");
+  assert.equal(modified.at(-1).aircraftType, "TST5");
+});
+
+test("classifies takeoff and landing across day and night cases", () => {
+  assert.equal(specialFlightNo("0166"), true);
+  assert.equal(specialFlightNo("729"), false);
+
+  assert.deepEqual(
+    classifyNightDay({ flightNo: "711", night: 0, blockTime: 90, takeoff: 1, landing: 1 }),
+    { dayTakeoff: 1, dayLanding: 1, nightTakeoff: "", nightLanding: "" },
+  );
+  assert.deepEqual(
+    classifyNightDay({ flightNo: "729", night: 71, blockTime: 71, takeoff: 1, landing: 0 }),
+    { dayTakeoff: "", dayLanding: "", nightTakeoff: 1, nightLanding: 0 },
+  );
+  assert.deepEqual(
+    classifyNightDay({ flightNo: "0166", night: 210, blockTime: 378, takeoff: 1, landing: 1 }),
+    { dayTakeoff: "", dayLanding: 1, nightTakeoff: 1, nightLanding: "" },
+  );
+  assert.deepEqual(
+    classifyNightDay({ flightNo: "729", night: 71, blockTime: 90, takeoff: 1, landing: 1 }),
+    { dayTakeoff: 1, dayLanding: "", nightTakeoff: "", nightLanding: 1 },
+  );
+});
+
+test("builds output page totals and previous totals", () => {
+  const originalRows = parseOriginalRows(parseTsv(fixture));
+  const modified = modifyRows(originalRows, testConfig, { pageSize: 2 });
+  const page2 = buildOutputPage(modified, 2, 2);
+
+  assert.equal(page2.start, 3);
+  assert.equal(page2.end, 4);
+  assert.equal(page2.count, 2);
+  assert.equal(formatDuration(page2.pageTotal.blockTime), "04:06");
+  assert.equal(formatDuration(page2.pageTotal.fo), "04:06");
+  assert.equal(formatDuration(page2.previousTotal.blockTime), "02:41");
+  assert.equal(formatDuration(page2.newTotal.blockTime), "06:47");
+});
+
+test("builds validation report for upload harness", () => {
+  const originalRows = parseOriginalRows(parseTsv(fixture));
+  const report = buildValidationReport(originalRows, testConfig, { pageSize: 2 });
+
+  assert.equal(report.originalCount, 5);
+  assert.equal(report.filteredCount, 4);
+  assert.equal(report.excludedCount, 1);
+  assert.equal(report.dutyCounts.O, 1);
+  assert.deepEqual(report.unknownAircraft, []);
+  assert.equal(report.pageCount, 2);
+});

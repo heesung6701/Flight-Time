@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flight Time Logbook</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">CPS to Logbook</p>
+          <h1>Flight Time Output</h1>
+        </div>
+        <div class="actions">
+          <label class="file-button">
+            <input id="workbookInput" type="file" accept=".xlsx,.xls,.csv" />
+            <span>original 불러오기</span>
+          </label>
+          <button id="printButton" type="button" title="Print output">Print</button>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <aside class="panel input-panel">
+          <div class="panel-header">
+            <h2>Input</h2>
+            <span id="loadState">파일 대기 중</span>
+          </div>
+
+          <label class="field">
+            <span>original 붙여넣기</span>
+            <textarea
+              id="pasteArea"
+              placeholder="CPS 엑셀의 original 영역만 복사해서 붙여넣을 수 있습니다. 파일 업로드가 가능하면 이 칸은 비워도 됩니다."
+            ></textarea>
+          </label>
+          <button id="parsePasteButton" class="secondary" type="button">붙여넣은 데이터 적용</button>
+
+          <div class="stats-grid">
+            <div>
+              <span>원본</span>
+              <strong id="originalCount">0</strong>
+            </div>
+            <div>
+              <span>출력</span>
+              <strong id="filteredCount">0</strong>
+            </div>
+            <div>
+              <span>페이지</span>
+              <strong id="pageCount">0</strong>
+            </div>
+          </div>
+
+          <div class="config-box">
+            <div class="panel-header compact">
+              <div>
+                <h2>Config</h2>
+                <span id="configState">브라우저에 저장됨</span>
+              </div>
+              <div class="config-actions">
+                <button id="resetConfigButton" class="small-button" type="button">초기화</button>
+                <button id="addConfigButton" class="icon-button" type="button" title="Add config row">+</button>
+              </div>
+            </div>
+            <div class="config-table-wrap">
+              <table class="config-table">
+                <thead>
+                  <tr>
+                    <th>A/C No</th>
+                    <th>Type</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="configBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </aside>
+
+        <section class="output-panel">
+          <div class="output-controls">
+            <div>
+              <p id="pageRange" class="eyebrow">page in 1~0</p>
+              <h2>Output</h2>
+            </div>
+            <div class="pager">
+              <button id="prevPage" type="button" title="Previous page">‹</button>
+              <label>
+                <span>page</span>
+                <input id="pageInput" type="number" min="1" value="1" />
+              </label>
+              <button id="nextPage" type="button" title="Next page">›</button>
+            </div>
+          </div>
+
+          <div class="summary-strip">
+            <div><span>Start</span><strong id="startNo">-</strong></div>
+            <div><span>End</span><strong id="endNo">-</strong></div>
+            <div><span>Count</span><strong id="pageRows">-</strong></div>
+            <div><span>B/T</span><strong id="blockTotal">00:00</strong></div>
+            <div><span>Actual Inst.</span><strong id="instTotal">00:00</strong></div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="logbook-table">
+              <colgroup>
+                <col class="w-date" />
+                <col class="w-type" />
+                <col class="w-ident" />
+                <col class="w-airport" />
+                <col class="w-airport" />
+                <col class="w-flight" />
+                <col class="w-count" />
+                <col class="w-count" />
+                <col class="w-count" />
+                <col class="w-count" />
+                <col class="w-count" />
+                <col class="w-time" />
+                <col class="w-time" />
+                <col class="w-time" />
+                <col class="w-inst" />
+                <col class="w-time" />
+                <col class="w-time" />
+                <col class="w-time" />
+                <col class="w-time" />
+                <col class="w-wide" />
+                <col class="w-wide" />
+                <col class="w-wide" />
+                <col class="w-remark" />
+                <col class="w-no" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th rowspan="3">DATE<br />(Mon / Day)</th>
+                  <th rowspan="3">AIRCRAFT<br />TYPE</th>
+                  <th rowspan="3">AIRCRAFT<br />IDENT</th>
+                  <th colspan="2">ROUTE OF FLIGHT</th>
+                  <th rowspan="3">FLT.<br />NO.</th>
+                  <th colspan="4">T/O &amp; L/D</th>
+                  <th rowspan="3">A/L</th>
+                  <th colspan="3">CONDITION OF FLT.</th>
+                  <th rowspan="3">TYPE&amp;NO<br />INST. APP&gt;</th>
+                  <th rowspan="3">B/T</th>
+                  <th colspan="3">TYPE OF PILOTING TIME</th>
+                  <th rowspan="3">FLIGHT<br />SIMULATOR</th>
+                  <th rowspan="3">AS FLIGHT<br />INSTRUCTOR</th>
+                  <th rowspan="3">AS SIMULATOR<br />INSTRUCTOR</th>
+                  <th rowspan="3">REMARK</th>
+                  <th rowspan="3">no</th>
+                </tr>
+                <tr>
+                  <th rowspan="2">FROM</th>
+                  <th rowspan="2">TO</th>
+                  <th colspan="2">DAY</th>
+                  <th colspan="2">NIGHT</th>
+                  <th rowspan="2">DAY</th>
+                  <th rowspan="2">NIGHT</th>
+                  <th rowspan="2">ACTUAL<br />INST.</th>
+                  <th rowspan="2">PIC</th>
+                  <th rowspan="2">F/O</th>
+                  <th rowspan="2"></th>
+                </tr>
+                <tr>
+                  <th>T/O</th>
+                  <th>L/D</th>
+                  <th>T/O</th>
+                  <th>L/D</th>
+                </tr>
+              </thead>
+              <tbody id="outputBody"></tbody>
+              <tfoot id="totalBody"></tfoot>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <template id="emptyRowTemplate">
+      <tr class="empty-row">
+        <td colspan="24">original 데이터를 불러오면 output이 여기에 표시됩니다.</td>
+      </tr>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

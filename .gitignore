@@ -1,0 +1,8 @@
+dist/
+node_modules/
+.DS_Store
+flighttime_web_prd.md
+*.xlsx
+*.xls
+local-fixtures/
+private-fixtures/

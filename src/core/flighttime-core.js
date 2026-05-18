@@ -1,0 +1,273 @@
+export const DEFAULT_PAGE_SIZE = 19;
+export const DEFAULT_EXCLUDED_DUTIES = ["O", "EX", "2F"];
+export const DEFAULT_UNKNOWN_AIRCRAFT_POLICY = "unknown";
+
+export const defaultConfig = [];
+
+export function clean(value) {
+  if (value === null || value === undefined) return "";
+  return String(value).trim();
+}
+
+export function numeric(value) {
+  if (value === "" || value === null || value === undefined) return 0;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export function parseDuration(value, dateParser) {
+  if (value === null || value === undefined || value === "") return 0;
+  if (typeof value === "number") {
+    return value > 0 && value < 1 ? Math.round(value * 24 * 60) : Math.round(value);
+  }
+  if (value instanceof Date) {
+    return value.getHours() * 60 + value.getMinutes();
+  }
+  const text = clean(value);
+  if (!text) return 0;
+  if (dateParser && typeof value === "number") {
+    const parsed = dateParser(value);
+    if (parsed) return parsed.hours * 60 + parsed.minutes;
+  }
+  const match = text.match(/^(-?\d+):(\d{1,2})$/);
+  if (!match) return 0;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+export function formatDuration(minutes) {
+  if (!minutes) return "";
+  const sign = minutes < 0 ? "-" : "";
+  const abs = Math.abs(Math.round(minutes));
+  const hours = Math.floor(abs / 60);
+  const mins = abs % 60;
+  return `${sign}${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+}
+
+export function displayCount(value) {
+  if (value === "" || value === null || value === undefined) return "";
+  const num = Number(value);
+  return Number.isFinite(num) ? String(num) : clean(value);
+}
+
+export function parseDate(value, xlsxDateParser) {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+  if (typeof value === "number" && xlsxDateParser) {
+    const parsed = xlsxDateParser(value);
+    if (parsed) {
+      return `${parsed.y}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
+    }
+  }
+  return clean(value);
+}
+
+export function parseTsv(text) {
+  return clean(text)
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => line.split("\t"));
+}
+
+export function isSummaryRow(rawRow) {
+  return rawRow.some((value) => clean(value).includes("계"));
+}
+
+export function parseOriginalRows(rows, options = {}) {
+  const firstCell = clean(rows[0]?.[0]).toLowerCase();
+  const startRow = firstCell === "a/c no" ? 2 : 0;
+  return rows
+    .slice(startRow)
+    .filter((row) => !isSummaryRow(row))
+    .map((row, index) => ({
+      sourceIndex: startRow + index + 1,
+      aircraft: clean(row[0]),
+      date: parseDate(row[1], options.xlsxDateParser),
+      duty: clean(row[2]),
+      flightNo: clean(row[3]),
+      from: clean(row[4]),
+      to: clean(row[5]),
+      ro: clean(row[7]),
+      ri: clean(row[8]),
+      blockTime: parseDuration(row[9]),
+      takeoffTime: clean(row[10]),
+      landingTime: clean(row[11]),
+      airTime: parseDuration(row[12]),
+      inst: parseDuration(row[13]),
+      night: parseDuration(row[14]),
+      takeoff: numeric(row[15]),
+      landing: numeric(row[16]),
+    }))
+    .filter((row) => row.aircraft && row.date && row.flightNo);
+}
+
+export function buildConfigMap(configRows) {
+  return new Map(
+    configRows
+      .filter((row) => clean(row.aircraft))
+      .map((row) => [clean(row.aircraft).toUpperCase(), clean(row.type)]),
+  );
+}
+
+export function specialFlightNo(flightNo) {
+  const text = clean(flightNo);
+  if (!/^\d+$/.test(text)) return false;
+  const first = text[0];
+  return (first === "0" || first === "1") && Number(text) % 2 === 0;
+}
+
+export function classifyNightDay(row) {
+  const hasNight = row.night > 0;
+  const nightEqualsBlock = hasNight && row.night === row.blockTime;
+  const isSpecial = specialFlightNo(row.flightNo);
+
+  if (!hasNight) {
+    return {
+      dayTakeoff: row.takeoff,
+      dayLanding: row.landing,
+      nightTakeoff: "",
+      nightLanding: "",
+    };
+  }
+
+  if (nightEqualsBlock) {
+    return {
+      dayTakeoff: "",
+      dayLanding: "",
+      nightTakeoff: row.takeoff,
+      nightLanding: row.landing,
+    };
+  }
+
+  if (isSpecial) {
+    return {
+      dayTakeoff: "",
+      dayLanding: row.landing,
+      nightTakeoff: row.takeoff,
+      nightLanding: "",
+    };
+  }
+
+  return {
+    dayTakeoff: row.takeoff,
+    dayLanding: "",
+    nightTakeoff: "",
+    nightLanding: row.landing,
+  };
+}
+
+export function filterRows(originalRows, excludedDuties = DEFAULT_EXCLUDED_DUTIES) {
+  const excluded = new Set(excludedDuties.map((duty) => duty.toUpperCase()));
+  return originalRows.filter((row) => !excluded.has(row.duty.toUpperCase()));
+}
+
+export function collectUnknownAircraft(originalRows, configRows, excludedDuties = DEFAULT_EXCLUDED_DUTIES) {
+  const configMap = buildConfigMap(configRows);
+  const values = new Set();
+  for (const row of filterRows(originalRows, excludedDuties)) {
+    if (!configMap.has(row.aircraft.toUpperCase())) values.add(row.aircraft);
+  }
+  return [...values].sort();
+}
+
+export function modifyRows(originalRows, configRows, options = {}) {
+  const pageSize = options.pageSize || DEFAULT_PAGE_SIZE;
+  const excludedDuties = options.excludedDuties || DEFAULT_EXCLUDED_DUTIES;
+  const unknownPolicy = options.unknownAircraftPolicy || DEFAULT_UNKNOWN_AIRCRAFT_POLICY;
+  const configMap = buildConfigMap(configRows);
+  const rows = filterRows(originalRows, excludedDuties);
+
+  return rows.map((row, index) => {
+    const id = index + 1;
+    const aircraftType = configMap.get(row.aircraft.toUpperCase()) || (unknownPolicy === "unknown" ? "UNKNOWN" : "");
+    const conditionDay = Math.max(row.blockTime - row.night, 0);
+    const classification = classifyNightDay(row);
+    return {
+      id,
+      page: Math.floor(index / pageSize) + 1,
+      date: row.date,
+      aircraftType,
+      aircraftIdent: row.aircraft,
+      from: row.from,
+      to: row.to,
+      flightNo: row.flightNo,
+      ...classification,
+      autoLand: "",
+      dayCondition: conditionDay || "",
+      nightCondition: row.night || "",
+      actualInst: row.inst || "",
+      instApp: "",
+      blockTime: row.blockTime || "",
+      pic: "",
+      fo: row.duty.toUpperCase() === "F" ? row.blockTime || "" : "",
+      otherPilot: "",
+      simulator: "",
+      flightInstructor: "",
+      simulatorInstructor: "",
+      remark: "",
+    };
+  });
+}
+
+export function sumRows(rows, key) {
+  return rows.reduce((total, row) => total + numeric(row[key]), 0);
+}
+
+export function sumMinutes(rows, key) {
+  return rows.reduce((total, row) => total + numeric(row[key]), 0);
+}
+
+export function buildSummary(rows) {
+  return {
+    dayTakeoff: sumRows(rows, "dayTakeoff"),
+    dayLanding: sumRows(rows, "dayLanding"),
+    nightTakeoff: sumRows(rows, "nightTakeoff"),
+    nightLanding: sumRows(rows, "nightLanding"),
+    dayCondition: sumMinutes(rows, "dayCondition"),
+    nightCondition: sumMinutes(rows, "nightCondition"),
+    actualInst: sumMinutes(rows, "actualInst"),
+    blockTime: sumMinutes(rows, "blockTime"),
+    fo: sumMinutes(rows, "fo"),
+  };
+}
+
+export function buildOutputPage(modifiedRows, page, pageSize = DEFAULT_PAGE_SIZE) {
+  const maxPage = Math.max(Math.ceil(modifiedRows.length / pageSize), 1);
+  const valid = page >= 1 && page <= maxPage && modifiedRows.length > 0;
+  const currentPage = valid ? page : 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const rows = valid ? modifiedRows.slice(startIndex, startIndex + pageSize) : [];
+  const previousRows = valid ? modifiedRows.slice(0, startIndex) : [];
+  const allRows = [...previousRows, ...rows];
+
+  return {
+    valid,
+    page: currentPage,
+    maxPage: modifiedRows.length ? maxPage : 0,
+    start: rows.length ? rows[0].id : null,
+    end: rows.length ? rows[rows.length - 1].id : null,
+    count: rows.length,
+    rows,
+    pageTotal: buildSummary(rows),
+    previousTotal: buildSummary(previousRows),
+    newTotal: buildSummary(allRows),
+  };
+}
+
+export function buildValidationReport(originalRows, configRows, options = {}) {
+  const excludedDuties = options.excludedDuties || DEFAULT_EXCLUDED_DUTIES;
+  const dutyCounts = {};
+  for (const row of originalRows) {
+    dutyCounts[row.duty || "(blank)"] = (dutyCounts[row.duty || "(blank)"] || 0) + 1;
+  }
+  const unknownAircraft = collectUnknownAircraft(originalRows, configRows, excludedDuties);
+  const filteredRows = filterRows(originalRows, excludedDuties);
+  return {
+    originalCount: originalRows.length,
+    filteredCount: filteredRows.length,
+    excludedCount: originalRows.length - filteredRows.length,
+    dutyCounts,
+    unknownAircraft,
+    pageCount: Math.ceil(filteredRows.length / (options.pageSize || DEFAULT_PAGE_SIZE)),
+  };
+}
