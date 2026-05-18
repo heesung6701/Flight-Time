@@ -16,6 +16,7 @@ const state = {
   modifiedRows: [],
   currentPage: 1,
   pageSize: DEFAULT_PAGE_SIZE,
+  effectivePageSize: DEFAULT_PAGE_SIZE,
 };
 
 const els = {
@@ -68,18 +69,18 @@ function setLoaded(message) {
 }
 
 function buildModifiedRows() {
-  state.pageSize = normalizePageSize(state.pageSize);
+  state.effectivePageSize = normalizePageSize(state.pageSize, state.originalRows.length);
   state.modifiedRows = modifyRows(state.originalRows, {
-    pageSize: state.pageSize,
+    pageSize: state.effectivePageSize,
   });
-  const maxPage = Math.max(Math.ceil(state.modifiedRows.length / state.pageSize), 1);
+  const maxPage = Math.max(Math.ceil(state.modifiedRows.length / state.effectivePageSize), 1);
   state.currentPage = Math.min(Math.max(state.currentPage, 1), maxPage);
 }
 
 function renderOutput() {
   buildModifiedRows();
   const report = buildValidationReport(state.originalRows);
-  const page = buildOutputPage(state.modifiedRows, state.currentPage, state.pageSize);
+  const page = buildOutputPage(state.modifiedRows, state.currentPage, state.effectivePageSize);
 
   els.originalCount.textContent = report.originalCount;
   els.filteredCount.textContent = report.filteredCount;
@@ -199,13 +200,13 @@ function handlePaste() {
 }
 
 function changePage(nextPage) {
-  const maxPage = Math.max(Math.ceil(state.modifiedRows.length / state.pageSize), 1);
+  const maxPage = Math.max(Math.ceil(state.modifiedRows.length / state.effectivePageSize), 1);
   state.currentPage = Math.min(Math.max(nextPage, 1), maxPage);
   renderOutput();
 }
 
 function changePageSize(nextPageSize) {
-  state.pageSize = normalizePageSize(nextPageSize);
+  state.pageSize = String(nextPageSize).toLowerCase() === "all" ? "all" : normalizePageSize(nextPageSize);
   state.currentPage = 1;
   renderOutput();
 }

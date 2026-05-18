@@ -1,8 +1,13 @@
 export const DEFAULT_PAGE_SIZE = 19;
 export const PAGE_SIZE_OPTIONS = [10, 19, 30, 50];
+export const ALL_PAGE_SIZE = "all";
 export const DEFAULT_EXCLUDED_DUTIES = ["O", "EX", "2F"];
 
-export function normalizePageSize(value) {
+export function normalizePageSize(value, rowCount = DEFAULT_PAGE_SIZE) {
+  if (String(value).toLowerCase() === ALL_PAGE_SIZE) {
+    const count = Number(rowCount);
+    return Number.isFinite(count) && count > 0 ? count : 1;
+  }
   const pageSize = Number(value);
   return PAGE_SIZE_OPTIONS.includes(pageSize) ? pageSize : DEFAULT_PAGE_SIZE;
 }
