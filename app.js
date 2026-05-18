@@ -3,7 +3,6 @@ import {
   buildOutputPage,
   buildValidationReport,
   clean,
-  defaultConfig,
   displayCount,
   formatDuration,
   modifyRows,
@@ -11,11 +10,8 @@ import {
   parseTsv,
 } from "./src/core/flighttime-core.js";
 
-const CONFIG_STORAGE_KEY = "flight-time.configRows";
-
 const state = {
   originalRows: [],
-  configRows: [],
   modifiedRows: [],
   currentPage: 1,
 };
@@ -29,10 +25,6 @@ const els = {
   originalCount: document.querySelector("#originalCount"),
   filteredCount: document.querySelector("#filteredCount"),
   pageCount: document.querySelector("#pageCount"),
-  configBody: document.querySelector("#configBody"),
-  configState: document.querySelector("#configState"),
-  addConfigButton: document.querySelector("#addConfigButton"),
-  resetConfigButton: document.querySelector("#resetConfigButton"),
   pageRange: document.querySelector("#pageRange"),
   pageInput: document.querySelector("#pageInput"),
   prevPage: document.querySelector("#prevPage"),
@@ -56,35 +48,6 @@ function rowsFromSheet(sheet) {
   });
 }
 
-function loadConfig() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY) || "null");
-    if (Array.isArray(stored)) {
-      const rows = stored
-        .map((row) => ({
-          aircraft: clean(row.aircraft),
-          type: clean(row.type),
-        }))
-        .filter((row) => row.aircraft || row.type);
-      if (rows.length) return rows;
-    }
-  } catch {
-    localStorage.removeItem(CONFIG_STORAGE_KEY);
-  }
-  return defaultConfig.map((row) => ({ ...row }));
-}
-
-function saveConfig() {
-  const rows = state.configRows
-    .map((row) => ({
-      aircraft: clean(row.aircraft),
-      type: clean(row.type),
-    }))
-    .filter((row) => row.aircraft || row.type);
-  localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(rows));
-  els.configState.textContent = "브라우저에 저장됨";
-}
-
 function escapeHtml(value) {
   return clean(value)
     .replaceAll("&", "&amp;")
@@ -102,30 +65,16 @@ function setLoaded(message) {
 }
 
 function buildModifiedRows() {
-  state.modifiedRows = modifyRows(state.originalRows, state.configRows, {
+  state.modifiedRows = modifyRows(state.originalRows, {
     pageSize: DEFAULT_PAGE_SIZE,
-    unknownAircraftPolicy: "unknown",
   });
   const maxPage = Math.max(Math.ceil(state.modifiedRows.length / DEFAULT_PAGE_SIZE), 1);
   state.currentPage = Math.min(Math.max(state.currentPage, 1), maxPage);
 }
 
-function renderConfig() {
-  els.configBody.innerHTML = "";
-  state.configRows.forEach((row, index) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><input value="${escapeHtml(row.aircraft)}" data-config-index="${index}" data-config-key="aircraft" /></td>
-      <td><input value="${escapeHtml(row.type)}" data-config-index="${index}" data-config-key="type" /></td>
-      <td><button class="delete-row-button" type="button" data-config-delete="${index}" title="Delete config row">x</button></td>
-    `;
-    els.configBody.appendChild(tr);
-  });
-}
-
 function renderOutput() {
   buildModifiedRows();
-  const report = buildValidationReport(state.originalRows, state.configRows);
+  const report = buildValidationReport(state.originalRows);
   const page = buildOutputPage(state.modifiedRows, state.currentPage, DEFAULT_PAGE_SIZE);
 
   els.originalCount.textContent = report.originalCount;
@@ -265,34 +214,4 @@ els.printButton.addEventListener("click", () => window.print());
 els.prevPage.addEventListener("click", () => changePage(state.currentPage - 1));
 els.nextPage.addEventListener("click", () => changePage(state.currentPage + 1));
 els.pageInput.addEventListener("change", () => changePage(Number(els.pageInput.value || 1)));
-els.addConfigButton.addEventListener("click", () => {
-  state.configRows.push({ aircraft: "", type: "" });
-  renderConfig();
-  saveConfig();
-});
-els.resetConfigButton.addEventListener("click", () => {
-  state.configRows = defaultConfig.map((row) => ({ ...row }));
-  renderConfig();
-  saveConfig();
-  renderOutput();
-});
-els.configBody.addEventListener("input", (event) => {
-  const index = Number(event.target.dataset.configIndex);
-  const key = event.target.dataset.configKey;
-  if (!Number.isInteger(index) || !key) return;
-  state.configRows[index][key] = event.target.value;
-  saveConfig();
-  renderOutput();
-});
-els.configBody.addEventListener("click", (event) => {
-  const index = Number(event.target.dataset.configDelete);
-  if (!Number.isInteger(index)) return;
-  state.configRows.splice(index, 1);
-  renderConfig();
-  saveConfig();
-  renderOutput();
-});
-
-state.configRows = loadConfig();
-renderConfig();
 renderOutput();

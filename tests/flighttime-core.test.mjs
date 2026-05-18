@@ -14,13 +14,6 @@ import {
 } from "../src/core/flighttime-core.js";
 
 const fixture = fs.readFileSync(new URL("./fixtures/original-sample.tsv", import.meta.url), "utf8");
-const testConfig = [
-  { aircraft: "TEST001", type: "TST1" },
-  { aircraft: "TEST002", type: "TST2" },
-  { aircraft: "TEST003", type: "TST3" },
-  { aircraft: "TEST004", type: "TST4" },
-  { aircraft: "TEST005", type: "TST5" },
-];
 
 test("parses original rows and removes summary rows", () => {
   const rows = parseOriginalRows(parseTsv(fixture));
@@ -30,9 +23,9 @@ test("parses original rows and removes summary rows", () => {
   assert.equal(rows.at(-1).aircraft, "TEST005");
 });
 
-test("filters excluded duties and maps aircraft config", () => {
+test("filters excluded duties and keeps original aircraft type", () => {
   const originalRows = parseOriginalRows(parseTsv(fixture));
-  const modified = modifyRows(originalRows, testConfig);
+  const modified = modifyRows(originalRows);
 
   assert.equal(modified.length, 4);
   assert.equal(modified[0].aircraftType, "TST2");
@@ -63,7 +56,7 @@ test("classifies takeoff and landing across day and night cases", () => {
 
 test("builds output page totals and previous totals", () => {
   const originalRows = parseOriginalRows(parseTsv(fixture));
-  const modified = modifyRows(originalRows, testConfig, { pageSize: 2 });
+  const modified = modifyRows(originalRows, { pageSize: 2 });
   const page2 = buildOutputPage(modified, 2, 2);
 
   assert.equal(page2.start, 3);
@@ -77,12 +70,11 @@ test("builds output page totals and previous totals", () => {
 
 test("builds validation report for upload harness", () => {
   const originalRows = parseOriginalRows(parseTsv(fixture));
-  const report = buildValidationReport(originalRows, testConfig, { pageSize: 2 });
+  const report = buildValidationReport(originalRows, { pageSize: 2 });
 
   assert.equal(report.originalCount, 5);
   assert.equal(report.filteredCount, 4);
   assert.equal(report.excludedCount, 1);
   assert.equal(report.dutyCounts.O, 1);
-  assert.deepEqual(report.unknownAircraft, []);
   assert.equal(report.pageCount, 2);
 });

@@ -41,5 +41,5 @@ https://heesung6701.github.io/Flight-Time/
 
 - The app is static and runs in the browser.
 - Uploaded flight data is parsed locally in the browser.
-- Aircraft config is stored in the browser's `localStorage`.
+- `original` is the only input source; there is no separate config data.
 - `original` is the only expected input sheet/data source.

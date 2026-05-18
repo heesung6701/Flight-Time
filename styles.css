@@ -131,24 +131,6 @@ button.secondary:hover {
   background: #111827;
 }
 
-.icon-button {
-  width: 34px;
-  min-height: 34px;
-  padding: 0;
-  border-radius: 50%;
-}
-
-.small-button {
-  min-height: 34px;
-  padding: 0 10px;
-  background: #516070;
-  font-size: 12px;
-}
-
-.small-button:hover {
-  background: #344256;
-}
-
 .workspace {
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr);
@@ -176,21 +158,6 @@ button.secondary:hover {
 .panel-header span {
   color: var(--muted);
   font-size: 13px;
-}
-
-.panel-header.compact {
-  margin-top: 22px;
-  margin-bottom: 10px;
-}
-
-.panel-header.compact > div:first-child {
-  min-width: 0;
-}
-
-.config-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .field {
@@ -248,62 +215,6 @@ input:focus {
   display: block;
   margin-top: 3px;
   font-size: 20px;
-}
-
-.config-table-wrap {
-  max-height: 280px;
-  overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-}
-
-.config-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.config-table th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: #edf3f8;
-  color: #334155;
-  padding: 8px;
-  text-align: left;
-}
-
-.config-table td {
-  border-top: 1px solid var(--line);
-  padding: 4px;
-}
-
-.config-table input {
-  width: 100%;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  padding: 7px;
-  background: transparent;
-}
-
-.config-table input:focus {
-  background: white;
-}
-
-.delete-row-button {
-  width: 28px;
-  min-height: 28px;
-  padding: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: #7b8797;
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.delete-row-button:hover {
-  background: #fee2e2;
-  color: #b42318;
 }
 
 .output-panel {

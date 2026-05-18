@@ -1,8 +1,5 @@
 export const DEFAULT_PAGE_SIZE = 19;
 export const DEFAULT_EXCLUDED_DUTIES = ["O", "EX", "2F"];
-export const DEFAULT_UNKNOWN_AIRCRAFT_POLICY = "unknown";
-
-export const defaultConfig = [];
 
 export function clean(value) {
   if (value === null || value === undefined) return "";
@@ -87,6 +84,7 @@ export function parseOriginalRows(rows, options = {}) {
       flightNo: clean(row[3]),
       from: clean(row[4]),
       to: clean(row[5]),
+      type: clean(row[6]),
       ro: clean(row[7]),
       ri: clean(row[8]),
       blockTime: parseDuration(row[9]),
@@ -99,14 +97,6 @@ export function parseOriginalRows(rows, options = {}) {
       landing: numeric(row[16]),
     }))
     .filter((row) => row.aircraft && row.date && row.flightNo);
-}
-
-export function buildConfigMap(configRows) {
-  return new Map(
-    configRows
-      .filter((row) => clean(row.aircraft))
-      .map((row) => [clean(row.aircraft).toUpperCase(), clean(row.type)]),
-  );
 }
 
 export function specialFlightNo(flightNo) {
@@ -161,32 +151,20 @@ export function filterRows(originalRows, excludedDuties = DEFAULT_EXCLUDED_DUTIE
   return originalRows.filter((row) => !excluded.has(row.duty.toUpperCase()));
 }
 
-export function collectUnknownAircraft(originalRows, configRows, excludedDuties = DEFAULT_EXCLUDED_DUTIES) {
-  const configMap = buildConfigMap(configRows);
-  const values = new Set();
-  for (const row of filterRows(originalRows, excludedDuties)) {
-    if (!configMap.has(row.aircraft.toUpperCase())) values.add(row.aircraft);
-  }
-  return [...values].sort();
-}
-
-export function modifyRows(originalRows, configRows, options = {}) {
+export function modifyRows(originalRows, options = {}) {
   const pageSize = options.pageSize || DEFAULT_PAGE_SIZE;
   const excludedDuties = options.excludedDuties || DEFAULT_EXCLUDED_DUTIES;
-  const unknownPolicy = options.unknownAircraftPolicy || DEFAULT_UNKNOWN_AIRCRAFT_POLICY;
-  const configMap = buildConfigMap(configRows);
   const rows = filterRows(originalRows, excludedDuties);
 
   return rows.map((row, index) => {
     const id = index + 1;
-    const aircraftType = configMap.get(row.aircraft.toUpperCase()) || (unknownPolicy === "unknown" ? "UNKNOWN" : "");
     const conditionDay = Math.max(row.blockTime - row.night, 0);
     const classification = classifyNightDay(row);
     return {
       id,
       page: Math.floor(index / pageSize) + 1,
       date: row.date,
-      aircraftType,
+      aircraftType: row.type,
       aircraftIdent: row.aircraft,
       from: row.from,
       to: row.to,
@@ -254,20 +232,18 @@ export function buildOutputPage(modifiedRows, page, pageSize = DEFAULT_PAGE_SIZE
   };
 }
 
-export function buildValidationReport(originalRows, configRows, options = {}) {
+export function buildValidationReport(originalRows, options = {}) {
   const excludedDuties = options.excludedDuties || DEFAULT_EXCLUDED_DUTIES;
   const dutyCounts = {};
   for (const row of originalRows) {
     dutyCounts[row.duty || "(blank)"] = (dutyCounts[row.duty || "(blank)"] || 0) + 1;
   }
-  const unknownAircraft = collectUnknownAircraft(originalRows, configRows, excludedDuties);
   const filteredRows = filterRows(originalRows, excludedDuties);
   return {
     originalCount: originalRows.length,
     filteredCount: filteredRows.length,
     excludedCount: originalRows.length - filteredRows.length,
     dutyCounts,
-    unknownAircraft,
     pageCount: Math.ceil(filteredRows.length / (options.pageSize || DEFAULT_PAGE_SIZE)),
   };
 }
