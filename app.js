@@ -7,6 +7,7 @@ import {
   formatDuration,
   modifyRows,
   normalizePageSize,
+  parseAircraftTypeMap,
   parseOriginalRows,
   parseTsv,
 } from "./src/core/flighttime-core.js";
@@ -181,8 +182,11 @@ async function handleWorkbook(file) {
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
   const originalSheet = workbook.Sheets.original || workbook.Sheets.Original || workbook.Sheets[workbook.SheetNames[0]];
+  const configSheet = workbook.Sheets.config || workbook.Sheets.Config;
+  const aircraftTypes = configSheet ? parseAircraftTypeMap(rowsFromSheet(configSheet)) : {};
 
   state.originalRows = parseOriginalRows(rowsFromSheet(originalSheet), {
+    aircraftTypes,
     xlsxDateParser: XLSX.SSF.parse_date_code,
   });
   state.currentPage = 1;

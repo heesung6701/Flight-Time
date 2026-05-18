@@ -81,9 +81,19 @@ export function isSummaryRow(rawRow) {
   return rawRow.some((value) => clean(value).includes("계"));
 }
 
+export function parseAircraftTypeMap(configRows = []) {
+  return Object.fromEntries(
+    configRows
+      .slice(1)
+      .map((row) => [clean(row[0]), clean(row[1])])
+      .filter(([aircraft, type]) => aircraft && type),
+  );
+}
+
 export function parseOriginalRows(rows, options = {}) {
   const firstCell = clean(rows[0]?.[0]).toLowerCase();
   const startRow = firstCell === "a/c no" ? 2 : 0;
+  const aircraftTypes = options.aircraftTypes || {};
   return rows
     .slice(startRow)
     .filter((row) => !isSummaryRow(row))
@@ -95,7 +105,7 @@ export function parseOriginalRows(rows, options = {}) {
       flightNo: clean(row[3]),
       from: clean(row[4]),
       to: clean(row[5]),
-      type: clean(row[6]),
+      type: clean(row[6]) || aircraftTypes[clean(row[0])] || "",
       ro: clean(row[7]),
       ri: clean(row[8]),
       blockTime: parseDuration(row[9]),
