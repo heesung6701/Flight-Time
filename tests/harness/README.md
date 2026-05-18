@@ -17,7 +17,7 @@
 5. `0xxx`, `1xxx` 짝수 편명 예외 규칙
 6. DAY/NIGHT T/O/L/D 분류
 7. CONDITION DAY/NIGHT, ACTUAL INST., B/T, F/O 계산
-8. 19행 페이지 배정
+8. 20행 페이지 배정
 9. PAGE/PREVIOUS/NEW TOTAL 계산
 10. 기존 엑셀 output과 페이지 단위 비교
 
