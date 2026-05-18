@@ -9,8 +9,11 @@ import {
   formatDuration,
   modifyRows,
   normalizePageSize,
+  parseAircraftConfigText,
+  parseAircraftTypeMap,
   parseOriginalRows,
   parseTsv,
+  serializeAircraftTypeMap,
   specialFlightNo,
 } from "../src/core/flighttime-core.js";
 
@@ -31,6 +34,13 @@ test("shows the package version in a screen corner", () => {
   assert.match(indexHtml, new RegExp(`v${packageJson.version}`));
 });
 
+test("provides a config button and editable aircraft mapping popup", () => {
+  assert.match(indexHtml, /id="configButton"/);
+  assert.match(indexHtml, /id="configDialog"/);
+  assert.match(indexHtml, /id="configText"/);
+  assert.match(indexHtml, /항공기번호/);
+});
+
 test("parses original rows and removes summary rows", () => {
   const rows = parseOriginalRows(parseTsv(fixture));
 
@@ -46,6 +56,27 @@ test("filters excluded duties and keeps original aircraft type", () => {
   assert.equal(modified.length, 4);
   assert.equal(modified[0].aircraftType, "TST2");
   assert.equal(modified.at(-1).aircraftType, "TST5");
+});
+
+test("uses config aircraft registration mappings before the original type column", () => {
+  const rows = [["HL8329", "2030-01-01", "F", "101", "ICN", "CJU", "B738", "", "", "01:00", "", "", "", "", "", 1, 1]];
+  const originalRows = parseOriginalRows(rows, {
+    aircraftTypes: {
+      HL8329: "B73M",
+    },
+  });
+
+  assert.equal(originalRows[0].type, "B73M");
+  assert.equal(modifyRows(originalRows)[0].aircraftType, "B73M");
+});
+
+test("parses and serializes editable aircraft config text", () => {
+  assert.deepEqual(parseAircraftConfigText("HL8329\tB73M\nHL8248, B738\n# comment\nBADONLY"), {
+    HL8329: "B73M",
+    HL8248: "B738",
+  });
+
+  assert.equal(serializeAircraftTypeMap({ HL8248: "B738", HL8329: "B73M" }), "HL8248\tB738\nHL8329\tB73M");
 });
 
 test("calculates F/O from duty using full F block time and two thirds NF block time", () => {

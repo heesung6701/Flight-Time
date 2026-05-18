@@ -7,14 +7,20 @@ import {
   formatDuration,
   modifyRows,
   normalizePageSize,
+  parseAircraftConfigText,
   parseAircraftTypeMap,
   parseOriginalRows,
   parseTsv,
+  serializeAircraftTypeMap,
 } from "./src/core/flighttime-core.js";
 
+const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
+
 const state = {
+  rawOriginalRows: [],
   originalRows: [],
   modifiedRows: [],
+  aircraftTypes: loadSavedAircraftTypes(),
   currentPage: 1,
   pageSize: DEFAULT_PAGE_SIZE,
   effectivePageSize: DEFAULT_PAGE_SIZE,
@@ -24,6 +30,12 @@ const els = {
   workbookInput: document.querySelector("#workbookInput"),
   pasteArea: document.querySelector("#pasteArea"),
   parsePasteButton: document.querySelector("#parsePasteButton"),
+  configButton: document.querySelector("#configButton"),
+  configDialog: document.querySelector("#configDialog"),
+  configText: document.querySelector("#configText"),
+  configStatus: document.querySelector("#configStatus"),
+  saveConfigButton: document.querySelector("#saveConfigButton"),
+  closeConfigButton: document.querySelector("#closeConfigButton"),
   printButton: document.querySelector("#printButton"),
   loadState: document.querySelector("#loadState"),
   originalCount: document.querySelector("#originalCount"),
@@ -51,6 +63,63 @@ function rowsFromSheet(sheet) {
     defval: "",
     blankrows: false,
   });
+}
+
+function loadSavedAircraftTypes() {
+  try {
+    return parseAircraftConfigText(localStorage.getItem(CONFIG_STORAGE_KEY) || "");
+  } catch {
+    return {};
+  }
+}
+
+function saveAircraftTypes() {
+  localStorage.setItem(CONFIG_STORAGE_KEY, serializeAircraftTypeMap(state.aircraftTypes));
+}
+
+function refreshOriginalRows() {
+  state.originalRows = parseOriginalRows(state.rawOriginalRows, {
+    aircraftTypes: state.aircraftTypes,
+    xlsxDateParser: window.XLSX?.SSF?.parse_date_code,
+  });
+}
+
+function configCount() {
+  return Object.keys(state.aircraftTypes).length;
+}
+
+function updateConfigStatus() {
+  if (els.configStatus) {
+    els.configStatus.textContent = `현재 ${configCount()}개 등록`;
+  }
+}
+
+function openConfigDialog() {
+  els.configText.value = serializeAircraftTypeMap(state.aircraftTypes);
+  updateConfigStatus();
+  if (typeof els.configDialog.showModal === "function") {
+    els.configDialog.showModal();
+  } else {
+    els.configDialog.setAttribute("open", "");
+  }
+}
+
+function closeConfigDialog() {
+  if (typeof els.configDialog.close === "function") {
+    els.configDialog.close();
+  } else {
+    els.configDialog.removeAttribute("open");
+  }
+}
+
+function handleConfigSave() {
+  state.aircraftTypes = parseAircraftConfigText(els.configText.value);
+  saveAircraftTypes();
+  refreshOriginalRows();
+  updateConfigStatus();
+  setLoaded(`config ${configCount()}개 적용됨`);
+  renderOutput();
+  closeConfigDialog();
 }
 
 function escapeHtml(value) {
@@ -183,23 +252,28 @@ async function handleWorkbook(file) {
   const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
   const originalSheet = workbook.Sheets.original || workbook.Sheets.Original || workbook.Sheets[workbook.SheetNames[0]];
   const configSheet = workbook.Sheets.config || workbook.Sheets.Config;
-  const aircraftTypes = configSheet ? parseAircraftTypeMap(rowsFromSheet(configSheet)) : {};
+  if (configSheet) {
+    state.aircraftTypes = {
+      ...state.aircraftTypes,
+      ...parseAircraftTypeMap(rowsFromSheet(configSheet)),
+    };
+    saveAircraftTypes();
+  }
 
-  state.originalRows = parseOriginalRows(rowsFromSheet(originalSheet), {
-    aircraftTypes,
-    xlsxDateParser: XLSX.SSF.parse_date_code,
-  });
+  state.rawOriginalRows = rowsFromSheet(originalSheet);
+  refreshOriginalRows();
   state.currentPage = 1;
-  setLoaded(`${file.name} original 로드됨`);
+  setLoaded(`${file.name} original 로드됨 · config ${configCount()}개`);
   renderOutput();
 }
 
 function handlePaste() {
   const rows = parseTsv(els.pasteArea.value);
   if (!rows.length) return;
-  state.originalRows = parseOriginalRows(rows);
+  state.rawOriginalRows = rows;
+  refreshOriginalRows();
   state.currentPage = 1;
-  setLoaded("붙여넣기 적용됨");
+  setLoaded(`붙여넣기 적용됨 · config ${configCount()}개`);
   renderOutput();
 }
 
@@ -226,9 +300,16 @@ els.workbookInput.addEventListener("change", (event) => {
 });
 
 els.parsePasteButton.addEventListener("click", handlePaste);
+els.configButton.addEventListener("click", openConfigDialog);
+els.saveConfigButton.addEventListener("click", handleConfigSave);
+els.closeConfigButton.addEventListener("click", closeConfigDialog);
+els.configDialog.addEventListener("click", (event) => {
+  if (event.target === els.configDialog) closeConfigDialog();
+});
 els.printButton.addEventListener("click", () => window.print());
 els.prevPage.addEventListener("click", () => changePage(state.currentPage - 1));
 els.nextPage.addEventListener("click", () => changePage(state.currentPage + 1));
 els.pageSizeSelect.addEventListener("change", () => changePageSize(els.pageSizeSelect.value));
 els.pageInput.addEventListener("change", () => changePage(Number(els.pageInput.value || 1)));
+updateConfigStatus();
 renderOutput();

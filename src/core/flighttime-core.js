@@ -90,6 +90,26 @@ export function parseAircraftTypeMap(configRows = []) {
   );
 }
 
+export function parseAircraftConfigText(text) {
+  return Object.fromEntries(
+    clean(text)
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"))
+      .map((line) => line.split(/[\t, ]+/).map(clean))
+      .filter(([aircraft, type]) => aircraft && type)
+      .map(([aircraft, type]) => [aircraft, type]),
+  );
+}
+
+export function serializeAircraftTypeMap(aircraftTypes = {}) {
+  return Object.entries(aircraftTypes)
+    .filter(([aircraft, type]) => clean(aircraft) && clean(type))
+    .sort(([left], [right]) => clean(left).localeCompare(clean(right)))
+    .map(([aircraft, type]) => `${clean(aircraft)}\t${clean(type)}`)
+    .join("\n");
+}
+
 export function parseOriginalRows(rows, options = {}) {
   const firstCell = clean(rows[0]?.[0]).toLowerCase();
   const startRow = firstCell === "a/c no" ? 2 : 0;
@@ -105,7 +125,7 @@ export function parseOriginalRows(rows, options = {}) {
       flightNo: clean(row[3]),
       from: clean(row[4]),
       to: clean(row[5]),
-      type: clean(row[6]) || aircraftTypes[clean(row[0])] || "",
+      type: aircraftTypes[clean(row[0])] || clean(row[6]) || "",
       ro: clean(row[7]),
       ri: clean(row[8]),
       blockTime: parseDuration(row[9]),

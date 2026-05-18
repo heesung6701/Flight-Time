@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
   <body>
-    <div class="version-badge" aria-label="version">v0.1.2</div>
+    <div class="version-badge" aria-label="version">v0.1.3</div>
     <main class="app-shell">
       <section class="topbar">
         <div>
@@ -20,6 +20,7 @@
             <input id="workbookInput" type="file" accept=".xlsx,.xls,.csv" />
             <span>original 불러오기</span>
           </label>
+          <button id="configButton" type="button" class="secondary-action" title="항공기번호별 기종 설정">Config</button>
           <button id="printButton" type="button" title="Print output">Print</button>
         </div>
       </section>
@@ -169,6 +170,27 @@
         <td colspan="24">original 데이터를 불러오면 output이 여기에 표시됩니다.</td>
       </tr>
     </template>
+
+    <dialog id="configDialog" class="config-dialog" aria-labelledby="configDialogTitle">
+      <form method="dialog" class="config-card">
+        <div class="config-header">
+          <div>
+            <p class="eyebrow">Aircraft Config</p>
+            <h2 id="configDialogTitle">항공기번호 → 기종 설정</h2>
+          </div>
+          <button id="closeConfigButton" type="button" class="icon-button" aria-label="닫기">×</button>
+        </div>
+        <p class="config-help">
+          config 시트가 있으면 자동으로 읽고, 여기서 직접 수정할 수도 있습니다.
+          한 줄에 <strong>항공기번호 기종</strong> 형식으로 입력하세요. 예: <code>HL8329 B73M</code>
+        </p>
+        <textarea id="configText" class="config-text" spellcheck="false" placeholder="HL8329	B73M&#10;HL8248	B738"></textarea>
+        <div class="config-footer">
+          <span id="configStatus">현재 0개 등록</span>
+          <button id="saveConfigButton" type="button">저장 후 다시 계산</button>
+        </div>
+      </form>
+    </dialog>
 
     <script type="module" src="./app.js"></script>
   </body>

@@ -149,6 +149,82 @@ button.secondary:hover {
   background: #111827;
 }
 
+button.secondary-action {
+  background: #203044;
+}
+
+button.secondary-action:hover {
+  background: #111827;
+}
+
+.icon-button {
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  background: #e7edf5;
+  color: var(--ink);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.icon-button:hover {
+  background: #d9e0ea;
+}
+
+.config-dialog {
+  width: min(620px, calc(100vw - 28px));
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 24px 80px rgba(20, 32, 52, 0.28);
+}
+
+.config-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.config-card {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  background: white;
+}
+
+.config-header,
+.config-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.config-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.config-help code {
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: #eef6f5;
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
+.config-text {
+  min-height: 280px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.config-footer span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr);
@@ -396,7 +472,8 @@ select:focus {
   .input-panel,
   .output-controls,
   .summary-strip,
-  .version-badge {
+  .version-badge,
+  .config-dialog {
     display: none;
   }
 
