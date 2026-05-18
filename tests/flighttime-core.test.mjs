@@ -18,6 +18,14 @@ const fixture = fs.readFileSync(new URL("./fixtures/original-sample.tsv", import
 const indexHtml = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageJson = JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 
+const agentRules = fs.readFileSync(new URL("../AGENTS.md", import.meta.url), "utf8");
+
+test("requires every repository commit to bump the visible app version", () => {
+  assert.match(agentRules, /version/i);
+  assert.match(agentRules, /package\.json/);
+  assert.match(agentRules, /version-badge/);
+});
+
 test("shows the package version in a screen corner", () => {
   assert.match(indexHtml, /class="version-badge"/);
   assert.match(indexHtml, new RegExp(`v${packageJson.version}`));
