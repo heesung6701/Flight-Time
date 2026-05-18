@@ -15,6 +15,13 @@ import {
 } from "../src/core/flighttime-core.js";
 
 const fixture = fs.readFileSync(new URL("./fixtures/original-sample.tsv", import.meta.url), "utf8");
+const indexHtml = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const packageJson = JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+
+test("shows the package version in a screen corner", () => {
+  assert.match(indexHtml, /class="version-badge"/);
+  assert.match(indexHtml, new RegExp(`v${packageJson.version}`));
+});
 
 test("parses original rows and removes summary rows", () => {
   const rows = parseOriginalRows(parseTsv(fixture));
