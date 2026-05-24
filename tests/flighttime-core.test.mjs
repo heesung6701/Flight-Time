@@ -20,6 +20,7 @@ import {
 
 const fixture = fs.readFileSync(new URL("./fixtures/original-sample.tsv", import.meta.url), "utf8");
 const indexHtml = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const appJs = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
 const packageJson = JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 
 const agentRules = fs.readFileSync(new URL("../AGENTS.md", import.meta.url), "utf8");
@@ -180,6 +181,11 @@ test("renders zero takeoff counts as blank", () => {
   assert.equal(displayTakeoffCount("0"), "");
   assert.equal(displayTakeoffCount(1), "1");
   assert.equal(displayTakeoffCount(""), "");
+});
+
+test("wires landing counts through zero-blank display", () => {
+  assert.match(appJs, /cell\(displayTakeoffCount\(row\.dayLanding\)\)/);
+  assert.match(appJs, /cell\(displayTakeoffCount\(row\.nightLanding\)\)/);
 });
 
 test("builds validation report for upload harness", () => {
