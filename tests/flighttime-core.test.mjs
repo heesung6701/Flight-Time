@@ -45,6 +45,12 @@ test("cache-busts browser modules with the package version", () => {
   assert.match(appJs, new RegExp(`from "\\./src/core/flighttime-core\\.js\\?v=${packageJson.version}"`));
 });
 
+test("requests and caches sunrise/sunset times in UTC", () => {
+  assert.match(appJs, /const SUN_CACHE_KEY = "flightTimeSunTimesUtcByAirportDate"/);
+  assert.match(appJs, /timezone: "UTC"/);
+  assert.match(appJs, /UTC 일출/);
+});
+
 test("provides a config button and editable aircraft mapping popup", () => {
   assert.match(indexHtml, /id="configButton"/);
   assert.match(indexHtml, /id="configDialog"/);

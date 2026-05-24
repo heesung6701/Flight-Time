@@ -16,11 +16,11 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.14";
+} from "./src/core/flighttime-core.js?v=0.1.15";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
-const SUN_CACHE_KEY = "flightTimeSunTimesByAirportDate";
+const SUN_CACHE_KEY = "flightTimeSunTimesUtcByAirportDate";
 const AIRPORT_DATA_URL = "https://raw.githubusercontent.com/mwgg/Airports/master/airports.json";
 const SUN_API_URL = "https://api.sunrisesunset.io/json";
 
@@ -140,6 +140,7 @@ async function fetchSunTime(airport, date) {
     lng: String(airport.lng),
     date,
     time_format: "24",
+    timezone: "UTC",
   });
   const response = await fetch(`${SUN_API_URL}?${params}`);
   if (!response.ok) throw new Error(`sun data ${response.status}`);
@@ -148,7 +149,7 @@ async function fetchSunTime(airport, date) {
   return {
     sunrise: data.results.sunrise,
     sunset: data.results.sunset,
-    timezone: data.results.timezone || airport.tz || "",
+    timezone: "UTC",
   };
 }
 
@@ -288,7 +289,7 @@ function durationFormula(value, label = "값") {
 
 function sunWindowText(sunTimes) {
   if (!sunTimes?.sunrise || !sunTimes?.sunset) return "일출/일몰 정보 없음";
-  return `일출 ${sunTimes.sunrise}, 일몰 ${sunTimes.sunset}${sunTimes.timezone ? ` (${sunTimes.timezone})` : ""}`;
+  return `UTC 일출 ${sunTimes.sunrise}, UTC 일몰 ${sunTimes.sunset}${sunTimes.timezone ? ` (${sunTimes.timezone})` : ""}`;
 }
 
 function takeoffLandingTooltip(original, kind, value) {
@@ -304,7 +305,7 @@ function takeoffLandingTooltip(original, kind, value) {
   const displayed = displayTakeoffCount(value) || "blank";
 
   if (sunTimes) {
-    return `${column}: ${airport} ${date} ${clock || "시간 없음"} 기준. ${sunWindowText(sunTimes)}와 비교해 ${isNightColumn ? "야간" : "주간"}이면 원본 count ${count || 0} 표시 → ${displayed}.`;
+    return `${column}: ${airport} ${date} ${clock || "시간 없음"} UTC 기준. ${sunWindowText(sunTimes)}와 비교해 ${isNightColumn ? "야간" : "주간"}이면 원본 count ${count || 0} 표시 → ${displayed}.`;
   }
 
   const hasNight = original.night > 0;
