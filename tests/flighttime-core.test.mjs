@@ -6,6 +6,7 @@ import {
   buildOutputPage,
   buildValidationReport,
   classifyNightDay,
+  displayTakeoffCount,
   formatDuration,
   modifyRows,
   normalizePageSize,
@@ -172,6 +173,13 @@ test("normalizes selectable page sizes and falls back to the default", () => {
   assert.equal(normalizePageSize("all", 0), 1);
   assert.equal(normalizePageSize("999"), 19);
   assert.equal(normalizePageSize("bad value"), 19);
+});
+
+test("renders zero takeoff counts as blank", () => {
+  assert.equal(displayTakeoffCount(0), "");
+  assert.equal(displayTakeoffCount("0"), "");
+  assert.equal(displayTakeoffCount(1), "1");
+  assert.equal(displayTakeoffCount(""), "");
 });
 
 test("builds validation report for upload harness", () => {

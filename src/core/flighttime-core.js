@@ -57,6 +57,11 @@ export function displayCount(value) {
   return Number.isFinite(num) ? String(num) : clean(value);
 }
 
+export function displayTakeoffCount(value) {
+  if (Number(value) === 0) return "";
+  return displayCount(value);
+}
+
 export function parseDate(value, xlsxDateParser) {
   if (value instanceof Date) {
     return value.toISOString().slice(0, 10);
