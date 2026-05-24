@@ -13,7 +13,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js";
+} from "./src/core/flighttime-core.js?v=0.1.8";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 

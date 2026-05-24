@@ -36,6 +36,11 @@ test("shows the package version in a screen corner", () => {
   assert.match(indexHtml, new RegExp(`v${packageJson.version}`));
 });
 
+test("cache-busts browser modules with the package version", () => {
+  assert.match(indexHtml, new RegExp(`src="\\./app\\.js\\?v=${packageJson.version}"`));
+  assert.match(appJs, new RegExp(`from "\\./src/core/flighttime-core\\.js\\?v=${packageJson.version}"`));
+});
+
 test("provides a config button and editable aircraft mapping popup", () => {
   assert.match(indexHtml, /id="configButton"/);
   assert.match(indexHtml, /id="configDialog"/);
