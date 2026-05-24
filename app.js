@@ -15,7 +15,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.11";
+} from "./src/core/flighttime-core.js?v=0.1.12";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
@@ -126,7 +126,7 @@ function requiredSunKeys(rows) {
   const keys = new Map();
   for (const row of rowsNeedingSunTimes(rows)) {
     const departureDate = clean(row.date);
-    const arrivalDate = inferArrivalDate(departureDate, row.takeoffTime || row.ro, row.landingTime || row.ri);
+    const arrivalDate = inferArrivalDate(departureDate, row.ro, row.ri);
     if (row.from && departureDate) keys.set(airportSunKey(row.from, departureDate), { iata: row.from, date: departureDate });
     if (row.to && arrivalDate) keys.set(airportSunKey(row.to, arrivalDate), { iata: row.to, date: arrivalDate });
   }
@@ -243,7 +243,9 @@ function cell(value, className = "") {
   return `<td class="${className}">${escapeHtml(value)}</td>`;
 }
 
-
+function spanCell(value, colspan, className = "") {
+  return `<td colspan="${colspan}" class="${className}">${escapeHtml(value)}</td>`;
+}
 
 function setLoaded(message) {
   els.loadState.textContent = message;
@@ -254,7 +256,6 @@ function buildModifiedRows() {
   state.modifiedRows = modifyRows(state.originalRows, {
     pageSize: state.effectivePageSize,
     sunTimesByAirportDate: state.sunTimesByAirportDate,
-    useActualTimes: true,
   });
   const maxPage = Math.max(Math.ceil(state.modifiedRows.length / state.effectivePageSize), 1);
   state.currentPage = Math.min(Math.max(state.currentPage, 1), maxPage);
@@ -325,33 +326,32 @@ function renderTotals(page) {
   ];
   els.totalBody.innerHTML = totals
     .map(([label, summary]) => {
-      const values = [
-        "",
-        "",
-        "",
-        "",
-        label,
-        "",
-        summary.dayTakeoff || "",
-        summary.dayLanding || "",
-        summary.nightTakeoff || "",
-        summary.nightLanding || "",
-        "",
-        formatDuration(summary.dayCondition),
-        formatDuration(summary.nightCondition),
-        formatDuration(summary.actualInst),
-        "",
-        formatDuration(summary.blockTime),
-        "",
-        formatDuration(summary.fo),
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
+      const cells = [
+        cell(""),
+        cell(""),
+        cell(""),
+        cell(""),
+        spanCell(label, 2, "label-cell"),
+        cell(summary.dayTakeoff || ""),
+        cell(summary.dayLanding || ""),
+        cell(summary.nightTakeoff || ""),
+        cell(summary.nightLanding || ""),
+        cell(""),
+        cell(formatDuration(summary.dayCondition)),
+        cell(formatDuration(summary.nightCondition)),
+        cell(formatDuration(summary.actualInst)),
+        cell(""),
+        cell(formatDuration(summary.blockTime)),
+        cell(""),
+        cell(formatDuration(summary.fo)),
+        cell(""),
+        cell(""),
+        cell(""),
+        cell(""),
+        cell(""),
+        cell(""),
       ];
-      return `<tr>${values.map((value, index) => cell(value, index === 4 ? "label-cell" : "")).join("")}</tr>`;
+      return `<tr>${cells.join("")}</tr>`;
     })
     .join("");
 }

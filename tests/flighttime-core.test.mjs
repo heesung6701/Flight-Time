@@ -52,7 +52,6 @@ test("provides a config button and editable aircraft mapping popup", () => {
   assert.match(indexHtml, /항공기번호/);
 });
 
-
 test("parses original rows and removes summary rows", () => {
   const rows = parseOriginalRows(parseTsv(fixture));
 
@@ -199,6 +198,23 @@ test("classifies fixture daytime RO/RI as day takeoff and day landing", () => {
   });
 });
 
+test("ignores takeoff and landing time columns and classifies only by RO and RI", () => {
+  const [row] = parseOriginalRows([
+    ["HLTEST", "2030-06-01", "F", "729", "AAA", "BBB", "B738", "07:00", "20:00", "13:00", "23:00", "12:00", "12:30", "", "00:30", 1, 1],
+  ]);
+  const sunTimesByAirportDate = {
+    "AAA|2030-06-01": { sunrise: "06:00", sunset: "18:00" },
+    "BBB|2030-06-01": { sunrise: "06:00", sunset: "18:00" },
+  };
+
+  assert.deepEqual(classifyTakeoffLandingBySun(row, sunTimesByAirportDate), {
+    dayTakeoff: 1,
+    dayLanding: "",
+    nightTakeoff: "",
+    nightLanding: 1,
+  });
+});
+
 test("returns null when sun-based classification lacks required times", () => {
   const originalRows = parseOriginalRows(parseTsv(fixture));
   const row = originalRows.find((item) => item.aircraft === "TEST004");
@@ -238,7 +254,6 @@ test("modifyRows prefers sun-based classification when airport date sun times ar
       "AAA|2030-06-01": { sunrise: "06:00", sunset: "18:00" },
       "BBB|2030-06-01": { sunrise: "06:00", sunset: "21:00" },
     },
-    useActualTimes: true,
   });
 
   assert.equal(modified.dayTakeoff, "");
@@ -251,7 +266,7 @@ test("modifyRows falls back to legacy flight number classification when sun time
   const [row] = parseOriginalRows([
     ["HLTEST", "2030-06-01", "F", "729", "AAA", "BBB", "B738", "19:00", "20:30", "01:30", "19:15", "20:15", "01:00", "", "00:30", 1, 1],
   ]);
-  const [modified] = modifyRows([row], { sunTimesByAirportDate: {}, useActualTimes: true });
+  const [modified] = modifyRows([row], { sunTimesByAirportDate: {} });
 
   assert.equal(modified.dayTakeoff, 1);
   assert.equal(modified.nightLanding, 1);

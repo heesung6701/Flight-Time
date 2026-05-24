@@ -204,11 +204,11 @@ export function getSunTimes(sunTimesByAirportDate, iata, date) {
   return sunTimesByAirportDate?.[key] || null;
 }
 
-export function classifyTakeoffLandingBySun(row, sunTimesByAirportDate, options = {}) {
-  const takeoffTime = options.useActualTimes ? row.takeoffTime || row.ro : row.ro || row.takeoffTime;
-  const landingTime = options.useActualTimes ? row.landingTime || row.ri : row.ri || row.landingTime;
+export function classifyTakeoffLandingBySun(row, sunTimesByAirportDate) {
+  const takeoffTime = row.ro;
+  const landingTime = row.ri;
   const departureDate = clean(row.date);
-  const arrivalDate = inferArrivalDate(departureDate, row.ro || takeoffTime, row.ri || landingTime);
+  const arrivalDate = inferArrivalDate(departureDate, row.ro, row.ri);
   const departureSunTimes = getSunTimes(sunTimesByAirportDate, row.from, departureDate);
   const arrivalSunTimes = getSunTimes(sunTimesByAirportDate, row.to, arrivalDate);
   const takeoffNight = isClockNight(takeoffTime, departureSunTimes);
@@ -284,9 +284,7 @@ export function modifyRows(originalRows, options = {}) {
   return rows.map((row, index) => {
     const id = index + 1;
     const conditionDay = Math.max(row.blockTime - row.night, 0);
-    const sunClassification = classifyTakeoffLandingBySun(row, options.sunTimesByAirportDate, {
-      useActualTimes: options.useActualTimes,
-    });
+    const sunClassification = classifyTakeoffLandingBySun(row, options.sunTimesByAirportDate);
     const classification = sunClassification || classifyNightDay(row);
     return {
       id,
