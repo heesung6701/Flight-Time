@@ -21,6 +21,8 @@
 
 `original` 행은 아래 컬럼 순서로 해석됩니다.
 
+*original 데이터를 받아서 표출할 때 T/O, L/D 열에 0이 적혀 있을 경우 0을 적지 말고 공백으로 놔두기
+
 | original index | 의미 | 내부 필드명 | 처리 방식 |
 |---:|---|---|---|
 | 0 | A/C No | `aircraft` | 문자열 trim |
@@ -30,8 +32,8 @@
 | 4 | From | `from` | 문자열 trim |
 | 5 | To | `to` | 문자열 trim |
 | 6 | Type | `type` | `config` 매핑이 있으면 config 값 우선, 없으면 original 값 사용 |
-| 7 | RO | `ro` | 문자열 trim, 현재 output 계산에는 미사용 |
-| 8 | RI | `ri` | 문자열 trim, 현재 output 계산에는 미사용 |
+| 7 | RO | `ro` | 문자열 trim |
+| 8 | RI | `ri` | 문자열 trim |
 | 9 | Block Time | `blockTime` | 분 단위 숫자로 변환 |
 | 10 | Takeoff Time | `takeoffTime` | 문자열 trim, 현재 output 계산에는 미사용 |
 | 11 | Landing Time | `landingTime` | 문자열 trim, 현재 output 계산에는 미사용 |
@@ -41,6 +43,7 @@
 | 15 | Takeoff Count | `takeoff` | 숫자로 변환 |
 | 16 | Landing Count | `landing` | 숫자로 변환 |
 
+
 ### 1.2 `original` 행 제외/무시 조건
 
 다음 행은 계산 대상에서 제외됩니다.
@@ -49,7 +52,6 @@
 |---|---|
 | 첫 셀이 `A/C No`인 경우 | 헤더가 있는 데이터로 보고 앞의 2행을 건너뜁니다. |
 | 행의 어떤 셀이라도 `계`를 포함 | 합계/요약 행으로 보고 제외합니다. |
-| `aircraft`, `date`, `flightNo` 중 하나라도 없음 | 유효한 비행 행이 아니므로 제외합니다. |
 
 ### 1.3 `config` 입력
 
@@ -57,25 +59,9 @@
 
 입력 방식:
 
-1. 엑셀 파일 안의 `config` 또는 `Config` 시트
-2. 웹사이트의 `Config` 버튼 팝업에서 직접 입력
-3. 브라우저 `localStorage.flightTimeAircraftTypes`에 저장된 이전 config
-
-`config` 시트는 첫 번째 행을 헤더로 보고, 두 번째 행부터 아래처럼 읽습니다.
-
-| config index | 의미 |
-|---:|---|
-| 0 | 항공기번호 / A/C No |
-| 1 | 기종 / Aircraft Type |
-
-직접 입력 팝업은 한 줄당 `항공기번호 기종` 형식입니다.
-
-```txt
-HL8329 B73M
-HL8248 B738
-```
-
-구분자는 탭, 공백, 콤마를 지원합니다.
+1. config 초기 값을 github 에서 관리
+2. 웹사이트의 `Config` 버튼 팝업에서 수정 가능
+3. config 정보는 쿠키로 관리
 
 ## 2. 공통 변환 규칙
 
@@ -119,6 +105,7 @@ HL8248 B738
 | `O` |
 | `EX` |
 | `2F` |
+| `NF` | `Math.round(blockTime * 2 / 3)` |
 
 비교는 대소문자를 구분하지 않습니다.
 
@@ -132,13 +119,10 @@ HL8248 B738
 
 | UI 값 | 내부 page size |
 |---|---:|
-| `10` | 10 |
-| `20` | 20 |
-| `30` | 30 |
-| `50` | 50 |
+| `19` | 19 |
 | `All` | 현재 필터링된 전체 행 수 |
 
-기본값은 `20`입니다.
+기본값은 `19`입니다.
 
 `All`인데 행이 0개면 내부 계산 안정성을 위해 page size를 `1`로 처리합니다.
 
@@ -234,34 +218,37 @@ night > 0 && night === blockTime
 | NIGHT T/O | `takeoff` |
 | NIGHT L/D | `landing` |
 
-### 6.3 특수 Flight No인 경우
+### 6.3 공항별 일출·일몰 기준 주/야간 판정
 
-특수 Flight No 조건:
+이륙(T/O)과 착륙(L/D) 항목은 각각 해당 공항(From/To)의 IATA 코드를 기준으로 일출 및 일몰 시간을 조회하여 주간(DAY)과 야간(NIGHT)을 판정합니다.
 
-```txt
-flightNo가 숫자로만 구성되어 있고,
-첫 글자가 0 또는 1이고,
-Number(flightNo)가 짝수
-```
+**[판정 기준]**
+* **주간 (DAY):** 일출 시간부터 일몰 시간까지
+* **야간 (NIGHT):** 일몰 시간부터 일출 시간까지
 
-예: `0166`은 특수 Flight No입니다.
+---
 
-조건:
+#### 1) 이륙 (T/O) 판정 규칙
 
-```txt
-night > 0 && night !== blockTime && specialFlightNo(flightNo) === true
-```
+* **기준 공항:** `From` 공항의 IATA 코드
+* **판정 방식:** 출발 시간이 해당 공항의 일출/일몰 시간 중 어느 범위에 속하는지 확인
 
-결과:
+| 구분 | 조건 | DAY T/O | NIGHT T/O |
+|---|---|---|---|
+| **주간 이륙** | 출발 시간이 `From` 공항의 **주간** 범위에 속함 | `takeoff` | 빈 값 |
+| **야간 이륙** | 출발 시간이 `From` 공항의 **야간** 범위에 속함 | 빈 값 | `takeoff` |
 
-| output | 값 |
-|---|---|
-| DAY T/O | 빈 값 |
-| DAY L/D | `landing` |
-| NIGHT T/O | `takeoff` |
-| NIGHT L/D | 빈 값 |
+---
 
-### 6.4 그 외 Night 일부 포함 비행
+#### 2) 착륙 (L/D) 판정 규칙
+
+* **기준 공항:** `To` 공항의 IATA 코드
+* **판정 방식:** 도착 시간이 해당 공항의 일출/일몰 시간 중 어느 범위에 속하는지 확인
+
+| 구분 | 조건 | DAY L/D | NIGHT L/D |
+|---|---|---|---|
+| **주간 착륙** | 도착 시간이 `To` 공항의 **주간** 범위에 속함 | `landing` | 빈 값 |
+| **야간 착륙** | 도착 시간이 `To` 공항의 **야간** 범위에 속함 | 빈 값 | `landing` |### 6.4 그 외 Night 일부 포함 비행
 
 조건:
 
@@ -415,9 +402,8 @@ flowchart TD
 
 1. `config` 매핑은 original Type보다 우선합니다.
 2. Duty `O`, `EX`, `2F`는 output에서 제외됩니다.
-3. `original`의 `RO`, `RI`, `Takeoff Time`, `Landing Time`, `Air Time`은 파싱은 하지만 현재 output 계산에는 쓰지 않습니다.
-4. `NF`의 F/O는 Block Time의 2/3을 반올림합니다.
+3. `original`의 `Takeoff Time`, `Landing Time`, `Air Time`은 파싱은 하지만 현재 output 계산에는 쓰지 않습니다.
+4. `NF`의 B/T와 F/O는 Block Time의 2/3을 반올림합니다.
 5. Night 일부 포함 비행의 T/O/L/D 분류는 Flight No 특수 규칙에 따라 갈립니다.
-6. 특수 Flight No는 문자열 첫 글자가 `0` 또는 `1`이고 숫자값이 짝수인 경우입니다.
-7. 시간 값은 내부적으로 분 단위로 계산하고 화면에는 `HH:MM`으로 표시합니다.
-8. `0`인 시간 값은 대부분 빈 값으로 표시되며, 상단 요약의 `B/T`, `Actual Inst.`만 빈 값 대신 `00:00`을 표시합니다.
+6. 시간 값은 내부적으로 분 단위로 계산하고 화면에는 `HH:MM`으로 표시합니다.
+7. `0`인 시간 값은 대부분 빈 값으로 표시되며, 상단 요약의 `B/T`, `Actual Inst.`만 빈 값 대신 `00:00`을 표시합니다.
