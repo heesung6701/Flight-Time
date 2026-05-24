@@ -167,6 +167,16 @@ test("detects night outside sunrise-inclusive and sunset-exclusive day window", 
   assert.equal(isClockNight("18:00", sunTimes), true);
 });
 
+test("detects daytime when UTC sunrise/sunset window crosses midnight", () => {
+  const icnUtcSunTimes = { sunrise: "20:33:15", sunset: "10:30:45" };
+
+  assert.equal(isClockNight("19:00", icnUtcSunTimes), true);
+  assert.equal(isClockNight("20:33", icnUtcSunTimes), false);
+  assert.equal(isClockNight("22:59", icnUtcSunTimes), false);
+  assert.equal(isClockNight("10:29", icnUtcSunTimes), false);
+  assert.equal(isClockNight("10:30", icnUtcSunTimes), true);
+});
+
 test("infers arrival date from existing row RO/RI clocks when RI crosses midnight", () => {
   assert.equal(inferArrivalDate("2030-01-02", "02:30", "04:00"), "2030-01-02");
   assert.equal(inferArrivalDate("2030-01-02", "23:30", "01:10"), "2030-01-03");

@@ -177,7 +177,9 @@ export function isClockNight(clockTime, sunTimes) {
   const sunrise = parseClockMinutes(sunTimes?.sunrise);
   const sunset = parseClockMinutes(sunTimes?.sunset);
   if (clock === null || sunrise === null || sunset === null) return null;
-  return clock < sunrise || clock >= sunset;
+  if (sunrise < sunset) return clock < sunrise || clock >= sunset;
+  if (sunrise > sunset) return clock >= sunset && clock < sunrise;
+  return true;
 }
 
 export function addDays(dateText, days) {
