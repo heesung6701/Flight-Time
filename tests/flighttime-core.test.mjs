@@ -308,6 +308,7 @@ test("wires landing counts through zero-blank display", () => {
 
 test("adds calculation tooltips to output cells", () => {
   assert.match(appJs, /function tooltipAttr/);
+  assert.match(appJs, /값:/);
   assert.match(appJs, /rowTooltips\(row\)/);
   assert.match(appJs, /totalTooltip\(label, summary, rows, "blockTime"/);
 });

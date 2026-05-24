@@ -16,7 +16,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.13";
+} from "./src/core/flighttime-core.js?v=0.1.14";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
@@ -244,17 +244,20 @@ function escapeAttr(value) {
   return escapeHtml(value).replaceAll("'", "&#39;");
 }
 
-function tooltipAttr(tooltip) {
+function tooltipAttr(value, tooltip) {
   const text = clean(tooltip);
-  return text ? ` title="${escapeAttr(text)}" aria-label="${escapeAttr(text)}"` : "";
+  if (!text) return "";
+  const displayValue = clean(value) || "blank";
+  const title = `값: ${displayValue}\n${text}`;
+  return ` title="${escapeAttr(title)}" aria-label="${escapeAttr(title)}"`;
 }
 
 function cell(value, className = "", tooltip = "") {
-  return `<td class="${className}"${tooltipAttr(tooltip)}>${escapeHtml(value)}</td>`;
+  return `<td class="${className}"${tooltipAttr(value, tooltip)}>${escapeHtml(value)}</td>`;
 }
 
 function spanCell(value, colspan, className = "", tooltip = "") {
-  return `<td colspan="${colspan}" class="${className}"${tooltipAttr(tooltip)}>${escapeHtml(value)}</td>`;
+  return `<td colspan="${colspan}" class="${className}"${tooltipAttr(value, tooltip)}>${escapeHtml(value)}</td>`;
 }
 
 function setLoaded(message) {
