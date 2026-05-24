@@ -284,7 +284,10 @@ export function modifyRows(originalRows, options = {}) {
   return rows.map((row, index) => {
     const id = index + 1;
     const conditionDay = Math.max(row.blockTime - row.night, 0);
-    const classification = classifyNightDay(row);
+    const sunClassification = classifyTakeoffLandingBySun(row, options.sunTimesByAirportDate, {
+      useActualTimes: options.useActualTimes,
+    });
+    const classification = sunClassification || classifyNightDay(row);
     return {
       id,
       page: Math.floor(index / pageSize) + 1,

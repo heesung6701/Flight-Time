@@ -52,6 +52,7 @@ test("provides a config button and editable aircraft mapping popup", () => {
   assert.match(indexHtml, /항공기번호/);
 });
 
+
 test("parses original rows and removes summary rows", () => {
   const rows = parseOriginalRows(parseTsv(fixture));
 
@@ -225,6 +226,35 @@ test("classifies takeoff and landing across day and night cases", () => {
     classifyNightDay({ flightNo: "729", night: 71, blockTime: 90, takeoff: 1, landing: 1 }),
     { dayTakeoff: 1, dayLanding: "", nightTakeoff: "", nightLanding: 1 },
   );
+});
+
+
+test("modifyRows prefers sun-based classification when airport date sun times are available", () => {
+  const [row] = parseOriginalRows([
+    ["HLTEST", "2030-06-01", "F", "729", "AAA", "BBB", "B738", "19:00", "20:30", "01:30", "19:15", "20:15", "01:00", "", "00:30", 1, 1],
+  ]);
+  const [modified] = modifyRows([row], {
+    sunTimesByAirportDate: {
+      "AAA|2030-06-01": { sunrise: "06:00", sunset: "18:00" },
+      "BBB|2030-06-01": { sunrise: "06:00", sunset: "21:00" },
+    },
+    useActualTimes: true,
+  });
+
+  assert.equal(modified.dayTakeoff, "");
+  assert.equal(modified.nightTakeoff, 1);
+  assert.equal(modified.dayLanding, 1);
+  assert.equal(modified.nightLanding, "");
+});
+
+test("modifyRows falls back to legacy flight number classification when sun times are missing", () => {
+  const [row] = parseOriginalRows([
+    ["HLTEST", "2030-06-01", "F", "729", "AAA", "BBB", "B738", "19:00", "20:30", "01:30", "19:15", "20:15", "01:00", "", "00:30", 1, 1],
+  ]);
+  const [modified] = modifyRows([row], { sunTimesByAirportDate: {}, useActualTimes: true });
+
+  assert.equal(modified.dayTakeoff, 1);
+  assert.equal(modified.nightLanding, 1);
 });
 
 test("builds output page totals and previous totals", () => {

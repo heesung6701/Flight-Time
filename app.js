@@ -1,11 +1,13 @@
 import {
   DEFAULT_PAGE_SIZE,
   buildOutputPage,
+  airportSunKey,
   buildValidationReport,
   clean,
   displayCount,
   displayTakeoffCount,
   formatDuration,
+  inferArrivalDate,
   modifyRows,
   normalizePageSize,
   parseAircraftConfigText,
@@ -13,9 +15,13 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.10";
+} from "./src/core/flighttime-core.js?v=0.1.11";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
+const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
+const SUN_CACHE_KEY = "flightTimeSunTimesByAirportDate";
+const AIRPORT_DATA_URL = "https://raw.githubusercontent.com/mwgg/Airports/master/airports.json";
+const SUN_API_URL = "https://api.sunrisesunset.io/json";
 
 const state = {
   rawOriginalRows: [],
@@ -25,6 +31,8 @@ const state = {
   currentPage: 1,
   pageSize: DEFAULT_PAGE_SIZE,
   effectivePageSize: DEFAULT_PAGE_SIZE,
+  sunTimesByAirportDate: loadSavedJson(SUN_CACHE_KEY, {}),
+  sunRequestToken: 0,
 };
 
 const els = {
@@ -71,6 +79,106 @@ function loadSavedAircraftTypes() {
     return parseAircraftConfigText(localStorage.getItem(CONFIG_STORAGE_KEY) || "");
   } catch {
     return {};
+  }
+}
+
+function loadSavedJson(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || "") || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveJson(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Caches are best-effort only.
+  }
+}
+
+async function loadAirportsByIata() {
+  const cached = loadSavedJson(AIRPORT_CACHE_KEY, null);
+  if (cached && Object.keys(cached).length) return cached;
+
+  const response = await fetch(AIRPORT_DATA_URL);
+  if (!response.ok) throw new Error(`airport data ${response.status}`);
+  const airports = await response.json();
+  const byIata = {};
+  for (const airport of Object.values(airports)) {
+    const iata = clean(airport?.iata).toUpperCase();
+    const lat = Number(airport?.lat);
+    const lng = Number(airport?.lon);
+    if (iata && Number.isFinite(lat) && Number.isFinite(lng)) {
+      byIata[iata] = { lat, lng, name: clean(airport?.name), tz: clean(airport?.tz) };
+    }
+  }
+  saveJson(AIRPORT_CACHE_KEY, byIata);
+  return byIata;
+}
+
+function rowsNeedingSunTimes(rows) {
+  return rows.filter((row) => row.night > 0 && row.night !== row.blockTime);
+}
+
+function requiredSunKeys(rows) {
+  const keys = new Map();
+  for (const row of rowsNeedingSunTimes(rows)) {
+    const departureDate = clean(row.date);
+    const arrivalDate = inferArrivalDate(departureDate, row.takeoffTime || row.ro, row.landingTime || row.ri);
+    if (row.from && departureDate) keys.set(airportSunKey(row.from, departureDate), { iata: row.from, date: departureDate });
+    if (row.to && arrivalDate) keys.set(airportSunKey(row.to, arrivalDate), { iata: row.to, date: arrivalDate });
+  }
+  return [...keys.values()];
+}
+
+async function fetchSunTime(airport, date) {
+  const params = new URLSearchParams({
+    lat: String(airport.lat),
+    lng: String(airport.lng),
+    date,
+    time_format: "24",
+  });
+  const response = await fetch(`${SUN_API_URL}?${params}`);
+  if (!response.ok) throw new Error(`sun data ${response.status}`);
+  const data = await response.json();
+  if (!data?.results?.sunrise || !data?.results?.sunset) throw new Error("sun data missing sunrise/sunset");
+  return {
+    sunrise: data.results.sunrise,
+    sunset: data.results.sunset,
+    timezone: data.results.timezone || airport.tz || "",
+  };
+}
+
+async function refreshSunTimes() {
+  const token = ++state.sunRequestToken;
+  const requests = requiredSunKeys(state.originalRows).filter(({ iata, date }) => !state.sunTimesByAirportDate[airportSunKey(iata, date)]);
+  if (!requests.length) return;
+
+  setLoaded(`일출/일몰 ${requests.length}건 조회 중...`);
+  try {
+    const airportsByIata = await loadAirportsByIata();
+    let loaded = 0;
+    for (const { iata, date } of requests) {
+      const airport = airportsByIata[clean(iata).toUpperCase()];
+      if (!airport) continue;
+      const key = airportSunKey(iata, date);
+      state.sunTimesByAirportDate[key] = await fetchSunTime(airport, date);
+      loaded += 1;
+    }
+    saveJson(SUN_CACHE_KEY, state.sunTimesByAirportDate);
+    if (token === state.sunRequestToken) {
+      if (loaded) {
+        setLoaded(`일출/일몰 ${loaded}건 적용됨`);
+        renderOutput();
+      } else {
+        setLoaded("일출/일몰 공항 좌표 없음 · 기존 규칙으로 계산됨");
+      }
+    }
+  } catch (error) {
+    console.warn("Sunrise/sunset lookup failed; falling back to legacy classification", error);
+    if (token === state.sunRequestToken) setLoaded("일출/일몰 조회 실패 · 기존 규칙으로 계산됨");
   }
 }
 
@@ -135,6 +243,8 @@ function cell(value, className = "") {
   return `<td class="${className}">${escapeHtml(value)}</td>`;
 }
 
+
+
 function setLoaded(message) {
   els.loadState.textContent = message;
 }
@@ -143,6 +253,8 @@ function buildModifiedRows() {
   state.effectivePageSize = normalizePageSize(state.pageSize, state.originalRows.length);
   state.modifiedRows = modifyRows(state.originalRows, {
     pageSize: state.effectivePageSize,
+    sunTimesByAirportDate: state.sunTimesByAirportDate,
+    useActualTimes: true,
   });
   const maxPage = Math.max(Math.ceil(state.modifiedRows.length / state.effectivePageSize), 1);
   state.currentPage = Math.min(Math.max(state.currentPage, 1), maxPage);
@@ -266,6 +378,7 @@ async function handleWorkbook(file) {
   state.currentPage = 1;
   setLoaded(`${file.name} original 로드됨 · config ${configCount()}개`);
   renderOutput();
+  refreshSunTimes();
 }
 
 function handlePaste() {
@@ -276,6 +389,7 @@ function handlePaste() {
   state.currentPage = 1;
   setLoaded(`붙여넣기 적용됨 · config ${configCount()}개`);
   renderOutput();
+  refreshSunTimes();
 }
 
 function changePage(nextPage) {
