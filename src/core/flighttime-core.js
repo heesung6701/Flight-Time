@@ -152,6 +152,78 @@ export function specialFlightNo(flightNo) {
   return (first === "0" || first === "1") && Number(text) % 2 === 0;
 }
 
+export function parseClockMinutes(value) {
+  if (value === null || value === undefined || value === "") return null;
+  if (value instanceof Date) {
+    return value.getHours() * 60 + value.getMinutes();
+  }
+  const text = clean(value);
+  const match = text.match(/(?:^|T)(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?(?:$|[+-]\d{2}:?\d{2}|Z)/i);
+  if (!match) return null;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const meridiem = match[4]?.toUpperCase();
+  if (meridiem) {
+    if (hours < 1 || hours > 12) return null;
+    if (meridiem === "AM") hours = hours === 12 ? 0 : hours;
+    if (meridiem === "PM") hours = hours === 12 ? 12 : hours + 12;
+  }
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+  return hours * 60 + minutes;
+}
+
+export function isClockNight(clockTime, sunTimes) {
+  const clock = parseClockMinutes(clockTime);
+  const sunrise = parseClockMinutes(sunTimes?.sunrise);
+  const sunset = parseClockMinutes(sunTimes?.sunset);
+  if (clock === null || sunrise === null || sunset === null) return null;
+  return clock < sunrise || clock >= sunset;
+}
+
+export function addDays(dateText, days) {
+  const match = clean(dateText).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return clean(dateText);
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + days));
+  return date.toISOString().slice(0, 10);
+}
+
+export function inferArrivalDate(departureDate, ro, ri) {
+  const roMinutes = parseClockMinutes(ro);
+  const riMinutes = parseClockMinutes(ri);
+  if (roMinutes === null || riMinutes === null) return clean(departureDate);
+  return riMinutes < roMinutes ? addDays(departureDate, 1) : clean(departureDate);
+}
+
+export function airportSunKey(iata, date) {
+  return `${clean(iata).toUpperCase()}|${clean(date)}`;
+}
+
+export function getSunTimes(sunTimesByAirportDate, iata, date) {
+  const key = airportSunKey(iata, date);
+  if (sunTimesByAirportDate instanceof Map) return sunTimesByAirportDate.get(key) || null;
+  return sunTimesByAirportDate?.[key] || null;
+}
+
+export function classifyTakeoffLandingBySun(row, sunTimesByAirportDate, options = {}) {
+  const takeoffTime = options.useActualTimes ? row.takeoffTime || row.ro : row.ro || row.takeoffTime;
+  const landingTime = options.useActualTimes ? row.landingTime || row.ri : row.ri || row.landingTime;
+  const departureDate = clean(row.date);
+  const arrivalDate = inferArrivalDate(departureDate, row.ro || takeoffTime, row.ri || landingTime);
+  const departureSunTimes = getSunTimes(sunTimesByAirportDate, row.from, departureDate);
+  const arrivalSunTimes = getSunTimes(sunTimesByAirportDate, row.to, arrivalDate);
+  const takeoffNight = isClockNight(takeoffTime, departureSunTimes);
+  const landingNight = isClockNight(landingTime, arrivalSunTimes);
+
+  if (takeoffNight === null || landingNight === null) return null;
+
+  return {
+    dayTakeoff: takeoffNight ? "" : row.takeoff,
+    dayLanding: landingNight ? "" : row.landing,
+    nightTakeoff: takeoffNight ? row.takeoff : "",
+    nightLanding: landingNight ? row.landing : "",
+  };
+}
+
 export function classifyNightDay(row) {
   const hasNight = row.night > 0;
   const nightEqualsBlock = hasNight && row.night === row.blockTime;

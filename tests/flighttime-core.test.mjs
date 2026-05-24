@@ -6,8 +6,12 @@ import {
   buildOutputPage,
   buildValidationReport,
   classifyNightDay,
+  classifyTakeoffLandingBySun,
   displayTakeoffCount,
   formatDuration,
+  inferArrivalDate,
+  isClockNight,
+  parseClockMinutes,
   modifyRows,
   normalizePageSize,
   parseAircraftConfigText,
@@ -135,6 +139,70 @@ test("calculates F/O from duty using full F block time and two thirds NF block t
   assert.equal(modified[0].fo, 90);
   assert.equal(modified[1].fo, 60);
   assert.equal(modified[2].fo, "");
+});
+
+test("parses local clock times for sunrise/sunset comparison", () => {
+  assert.equal(parseClockMinutes("00:00"), 0);
+  assert.equal(parseClockMinutes("5:07"), 307);
+  assert.equal(parseClockMinutes("23:59"), 1439);
+  assert.equal(parseClockMinutes("2026-05-24T19:43"), 1183);
+  assert.equal(parseClockMinutes("5:20:33 AM"), 320);
+  assert.equal(parseClockMinutes("7:44:23 PM"), 1184);
+  assert.equal(parseClockMinutes("bad"), null);
+  assert.equal(parseClockMinutes("24:00"), null);
+});
+
+test("detects night outside sunrise-inclusive and sunset-exclusive day window", () => {
+  const sunTimes = { sunrise: "06:00", sunset: "18:00" };
+
+  assert.equal(isClockNight("05:59", sunTimes), true);
+  assert.equal(isClockNight("06:00", sunTimes), false);
+  assert.equal(isClockNight("17:59", sunTimes), false);
+  assert.equal(isClockNight("18:00", sunTimes), true);
+});
+
+test("infers arrival date from existing row RO/RI clocks when RI crosses midnight", () => {
+  assert.equal(inferArrivalDate("2030-01-02", "02:30", "04:00"), "2030-01-02");
+  assert.equal(inferArrivalDate("2030-01-02", "23:30", "01:10"), "2030-01-03");
+});
+
+test("classifies existing fixture takeoff and landing by RO/RI against airport sunrise/sunset", () => {
+  const originalRows = parseOriginalRows(parseTsv(fixture));
+  const row = originalRows.find((item) => item.aircraft === "TEST004");
+  const sunTimesByAirportDate = {
+    "CCC|2030-01-04": { sunrise: "06:00", sunset: "18:00" },
+    "AAA|2030-01-04": { sunrise: "06:00", sunset: "18:00" },
+  };
+
+  assert.deepEqual(classifyTakeoffLandingBySun(row, sunTimesByAirportDate), {
+    dayTakeoff: "",
+    dayLanding: "",
+    nightTakeoff: 1,
+    nightLanding: 1,
+  });
+});
+
+test("classifies fixture daytime RO/RI as day takeoff and day landing", () => {
+  const originalRows = parseOriginalRows(parseTsv(fixture));
+  const row = originalRows.find((item) => item.aircraft === "TEST005");
+  const sunTimesByAirportDate = {
+    "BBB|2030-01-05": { sunrise: "06:00", sunset: "18:00" },
+    "AAA|2030-01-05": { sunrise: "06:00", sunset: "18:00" },
+  };
+
+  assert.deepEqual(classifyTakeoffLandingBySun(row, sunTimesByAirportDate), {
+    dayTakeoff: 1,
+    dayLanding: 1,
+    nightTakeoff: "",
+    nightLanding: "",
+  });
+});
+
+test("returns null when sun-based classification lacks required times", () => {
+  const originalRows = parseOriginalRows(parseTsv(fixture));
+  const row = originalRows.find((item) => item.aircraft === "TEST004");
+
+  assert.equal(classifyTakeoffLandingBySun(row, {}), null);
 });
 
 test("classifies takeoff and landing across day and night cases", () => {
