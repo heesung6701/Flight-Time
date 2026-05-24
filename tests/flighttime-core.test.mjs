@@ -167,13 +167,11 @@ test("builds output page totals and previous totals", () => {
 });
 
 test("normalizes selectable page sizes and falls back to the default", () => {
-  assert.equal(normalizePageSize("10"), 10);
-  assert.equal(normalizePageSize(20), 20);
-  assert.equal(normalizePageSize(30), 30);
+  assert.equal(normalizePageSize("19"), 19);
   assert.equal(normalizePageSize("all", 42), 42);
   assert.equal(normalizePageSize("all", 0), 1);
-  assert.equal(normalizePageSize("999"), 20);
-  assert.equal(normalizePageSize("bad value"), 20);
+  assert.equal(normalizePageSize("999"), 19);
+  assert.equal(normalizePageSize("bad value"), 19);
 });
 
 test("builds validation report for upload harness", () => {

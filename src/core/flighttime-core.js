@@ -1,5 +1,5 @@
-export const DEFAULT_PAGE_SIZE = 20;
-export const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
+export const DEFAULT_PAGE_SIZE = 19;
+export const PAGE_SIZE_OPTIONS = [19];
 export const ALL_PAGE_SIZE = "all";
 export const DEFAULT_EXCLUDED_DUTIES = ["O", "EX", "2F"];
 
