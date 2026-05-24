@@ -167,7 +167,7 @@
 | CONDITION OF FLT. NIGHT | `nightCondition` | `night` 값. 0이면 빈 값 | original index 14 |
 | ACTUAL INST. | `actualInst` | `inst` 값. 0이면 빈 값 | original index 13 |
 | TYPE&NO INST. APP | `instApp` | 현재 항상 빈 값 | 없음 |
-| B/T | `blockTime` | `blockTime` 값. 0이면 빈 값 | original index 9 |
+| B/T | `blockTime` | Duty가 `NF`이면 `Math.round(blockTime * 2 / 3)`, 그 외에는 `blockTime` 값. 0이면 빈 값 | original index 2, 9 |
 | PIC | `pic` | 현재 항상 빈 값 | 없음 |
 | F/O | `fo` | Duty별 F/O 계산 | original index 2, 9 |
 | TYPE OF PILOTING TIME 빈 칸 | `otherPilot` | 현재 항상 빈 값 | 없음 |

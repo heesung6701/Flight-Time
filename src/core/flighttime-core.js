@@ -284,10 +284,15 @@ export function filterRows(originalRows, excludedDuties = DEFAULT_EXCLUDED_DUTIE
   return originalRows.filter((row) => !excluded.has(row.duty.toUpperCase()));
 }
 
+export function calculateCreditedBlockTime(row) {
+  const duty = row.duty.toUpperCase();
+  if (duty === "NF") return row.blockTime ? Math.round(row.blockTime * (2 / 3)) : "";
+  return row.blockTime || "";
+}
+
 export function calculateFoTime(row) {
   const duty = row.duty.toUpperCase();
-  if (duty === "F") return row.blockTime || "";
-  if (duty === "NF") return row.blockTime ? Math.round(row.blockTime * (2 / 3)) : "";
+  if (duty === "F" || duty === "NF") return calculateCreditedBlockTime(row);
   return "";
 }
 
@@ -316,7 +321,7 @@ export function modifyRows(originalRows, options = {}) {
       nightCondition: row.night || "",
       actualInst: row.inst || "",
       instApp: "",
-      blockTime: row.blockTime || "",
+      blockTime: calculateCreditedBlockTime(row),
       pic: "",
       fo: calculateFoTime(row),
       otherPilot: "",

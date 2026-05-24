@@ -122,7 +122,7 @@ test("defines a scheduled aircraft type update workflow", () => {
   assert.match(workflow, /contents: write/);
 });
 
-test("calculates F/O from duty using full F block time and two thirds NF block time", () => {
+test("calculates B/T and F/O from duty using full F block time and rounded two thirds NF block time", () => {
   const modified = modifyRows([
     {
       aircraft: "TEST-F",
@@ -146,7 +146,7 @@ test("calculates F/O from duty using full F block time and two thirds NF block t
       from: "BBB",
       to: "CCC",
       type: "TST",
-      blockTime: 90,
+      blockTime: 91,
       night: 0,
       inst: 0,
       takeoff: 0,
@@ -168,8 +168,11 @@ test("calculates F/O from duty using full F block time and two thirds NF block t
     },
   ]);
 
+  assert.equal(modified[0].blockTime, 90);
   assert.equal(modified[0].fo, 90);
-  assert.equal(modified[1].fo, 60);
+  assert.equal(modified[1].blockTime, 61);
+  assert.equal(modified[1].fo, 61);
+  assert.equal(modified[2].blockTime, 90);
   assert.equal(modified[2].fo, "");
 });
 

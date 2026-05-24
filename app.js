@@ -17,7 +17,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.16";
+} from "./src/core/flighttime-core.js?v=0.1.17";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
@@ -339,11 +339,15 @@ function rowTooltips(row) {
   const original = sourceRowForOutputRow(row);
   if (!original) return {};
   const dayCondition = `${durationFormula(original.blockTime, "B/T")} - ${durationFormula(original.night, "Night")} = ${formatDuration(Math.max(original.blockTime - original.night, 0)) || "00:00"}`;
-  const fo = original.duty.toUpperCase() === "F"
+  const duty = original.duty.toUpperCase();
+  const fo = duty === "F"
     ? `F/O: duty F라 B/T ${formatDuration(original.blockTime) || "00:00"} 전체 적용.`
-    : original.duty.toUpperCase() === "NF"
-      ? `F/O: duty NF라 B/T ${formatDuration(original.blockTime) || "00:00"} × 2/3 = ${formatDuration(row.fo) || "00:00"}.`
+    : duty === "NF"
+      ? `F/O: duty NF라 원본 B/T ${formatDuration(original.blockTime) || "00:00"} × 2/3 반올림 = ${formatDuration(row.fo) || "00:00"}.`
       : `F/O: duty ${original.duty || "blank"}는 F/O 시간 없음.`;
+  const blockTime = duty === "NF"
+    ? `B/T: duty NF라 원본 Block Time ${formatDuration(original.blockTime) || "00:00"} × 2/3 반올림 = ${formatDuration(row.blockTime) || "00:00"}.`
+    : `B/T: 원본 Block Time ${formatDuration(original.blockTime) || "00:00"} 적용.`;
   return {
     dayTakeoff: takeoffLandingTooltip(original, "dayTakeoff", row.dayTakeoff),
     dayLanding: takeoffLandingTooltip(original, "dayLanding", row.dayLanding),
@@ -352,7 +356,7 @@ function rowTooltips(row) {
     dayCondition: `Day condition: ${dayCondition}.`,
     nightCondition: `Night condition: 원본 Night ${formatDuration(original.night) || "00:00"} 적용.`,
     actualInst: `Actual Inst.: 원본 Inst. ${formatDuration(original.inst) || "00:00"} 적용.`,
-    blockTime: `B/T: 원본 Block Time ${formatDuration(original.blockTime) || "00:00"} 적용.`,
+    blockTime,
     fo,
   };
 }
