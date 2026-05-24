@@ -15,6 +15,7 @@ import {
   modifyRows,
   normalizePageSize,
   parseAircraftConfigText,
+  parseAircraftTypeDatabase,
   parseAircraftTypeMap,
   parseOriginalRows,
   parseTsv,
@@ -94,6 +95,31 @@ test("parses and serializes editable aircraft config text", () => {
   });
 
   assert.equal(serializeAircraftTypeMap({ HL8248: "B738", HL8329: "B73M" }), "HL8248\tB738\nHL8329\tB73M");
+});
+
+test("parses GitHub aircraft type database JSON into registration mappings", () => {
+  assert.deepEqual(
+    parseAircraftTypeDatabase({
+      aircraft: {
+        HL8329: { aircraftType: "B38M", model: "737 MAX 8" },
+        HL8248: { icaoCode: "B738" },
+        EMPTY: { model: "missing type" },
+      },
+    }),
+    { HL8329: "B38M", HL8248: "B738" },
+  );
+});
+
+test("build script publishes the aircraft type database with Pages assets", () => {
+  const buildScript = fs.readFileSync(new URL("../scripts/build-pages.mjs", import.meta.url), "utf8");
+  assert.match(buildScript, /data\/aircraft-types\.json/);
+});
+
+test("defines a scheduled aircraft type update workflow", () => {
+  const workflow = fs.readFileSync(new URL("../.github/workflows/update-aircraft-types.yml", import.meta.url), "utf8");
+  assert.match(workflow, /AERODATABOX_API_KEY/);
+  assert.match(workflow, /cron:/);
+  assert.match(workflow, /contents: write/);
 });
 
 test("calculates F/O from duty using full F block time and two thirds NF block time", () => {

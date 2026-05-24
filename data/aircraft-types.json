@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "description": "Aircraft registration to aircraft type database. Add registrations under aircraft; GitHub Actions fills aircraftType from AeroDataBox.",
+  "updatedAt": null,
+  "aircraft": {}
+}

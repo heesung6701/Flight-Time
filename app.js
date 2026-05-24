@@ -12,6 +12,7 @@ import {
   normalizePageSize,
   numeric,
   parseAircraftConfigText,
+  parseAircraftTypeDatabase,
   parseAircraftTypeMap,
   parseOriginalRows,
   parseTsv,
@@ -21,6 +22,7 @@ import {
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
 const SUN_CACHE_KEY = "flightTimeSunTimesUtcByAirportDate";
+const AIRCRAFT_TYPE_DB_URL = "./data/aircraft-types.json";
 const AIRPORT_DATA_URL = "https://raw.githubusercontent.com/mwgg/Airports/master/airports.json";
 const SUN_API_URL = "https://api.sunrisesunset.io/json";
 
@@ -29,6 +31,7 @@ const state = {
   originalRows: [],
   modifiedRows: [],
   aircraftTypes: loadSavedAircraftTypes(),
+  aircraftTypeDbLoaded: false,
   currentPage: 1,
   pageSize: DEFAULT_PAGE_SIZE,
   effectivePageSize: DEFAULT_PAGE_SIZE,
@@ -97,6 +100,20 @@ function saveJson(key, value) {
   } catch {
     // Caches are best-effort only.
   }
+}
+
+async function loadAircraftTypeDatabase() {
+  const response = await fetch(`${AIRCRAFT_TYPE_DB_URL}?v=${Date.now()}`, { cache: "no-store" });
+  if (!response.ok) throw new Error(`aircraft type db ${response.status}`);
+  const dbMap = parseAircraftTypeDatabase(await response.json());
+  state.aircraftTypes = {
+    ...dbMap,
+    ...loadSavedAircraftTypes(),
+  };
+  state.aircraftTypeDbLoaded = true;
+  refreshOriginalRows();
+  updateConfigStatus();
+  renderOutput();
 }
 
 async function loadAirportsByIata() {
@@ -201,7 +218,8 @@ function configCount() {
 
 function updateConfigStatus() {
   if (els.configStatus) {
-    els.configStatus.textContent = `현재 ${configCount()}개 등록`;
+    const source = state.aircraftTypeDbLoaded ? "GitHub DB + local" : "local";
+    els.configStatus.textContent = `현재 ${configCount()}개 등록 (${source})`;
   }
 }
 
@@ -514,3 +532,7 @@ els.pageSizeSelect.addEventListener("change", () => changePageSize(els.pageSizeS
 els.pageInput.addEventListener("change", () => changePage(Number(els.pageInput.value || 1)));
 updateConfigStatus();
 renderOutput();
+loadAircraftTypeDatabase().catch((error) => {
+  console.warn("Aircraft type database lookup failed; using local config only", error);
+  updateConfigStatus();
+});

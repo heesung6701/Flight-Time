@@ -107,6 +107,19 @@ export function parseAircraftConfigText(text) {
   );
 }
 
+export function parseAircraftTypeDatabase(data) {
+  const aircraft = data?.aircraft && typeof data.aircraft === "object" ? data.aircraft : data;
+  if (!aircraft || typeof aircraft !== "object" || Array.isArray(aircraft)) return {};
+  return Object.fromEntries(
+    Object.entries(aircraft)
+      .map(([registration, record]) => {
+        const aircraftType = typeof record === "string" ? record : record?.aircraftType || record?.icaoCode || record?.modelCode || "";
+        return [clean(registration).toUpperCase(), clean(aircraftType).toUpperCase()];
+      })
+      .filter(([registration, aircraftType]) => registration && aircraftType),
+  );
+}
+
 export function serializeAircraftTypeMap(aircraftTypes = {}) {
   return Object.entries(aircraftTypes)
     .filter(([aircraft, type]) => clean(aircraft) && clean(type))
@@ -130,7 +143,7 @@ export function parseOriginalRows(rows, options = {}) {
       flightNo: clean(row[3]),
       from: clean(row[4]),
       to: clean(row[5]),
-      type: aircraftTypes[clean(row[0])] || clean(row[6]) || "",
+      type: aircraftTypes[clean(row[0])] || aircraftTypes[clean(row[0]).toUpperCase()] || clean(row[6]) || "",
       ro: clean(row[7]),
       ri: clean(row[8]),
       blockTime: parseDuration(row[9]),

@@ -1,0 +1,58 @@
+name: Update aircraft type database
+
+on:
+  schedule:
+    # Daily at 03:10 KST. The batch only calls AeroDataBox for registrations
+    # that exist in data/aircraft-types.json and do not have aircraftType yet.
+    - cron: "10 18 * * *"
+  workflow_dispatch:
+    inputs:
+      registrations:
+        description: "Optional aircraft registrations to add/look up, comma or space separated (e.g. HL8329 HL8248)"
+        required: false
+        type: string
+      max_requests:
+        description: "Max AeroDataBox calls for this run"
+        required: false
+        default: "25"
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-aircraft-types
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Update aircraft type JSON from AeroDataBox
+        env:
+          AERODATABOX_API_KEY: ${{ secrets.AERODATABOX_API_KEY }}
+          AIRCRAFT_REGISTRATIONS: ${{ inputs.registrations }}
+          AERODATABOX_MAX_REQUESTS: ${{ inputs.max_requests || '25' }}
+        run: npm run update:aircraft-types
+
+      - name: Commit database changes
+        run: |
+          if git diff --quiet -- data/aircraft-types.json; then
+            echo "No aircraft type database changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/aircraft-types.json
+          git commit -m "chore: update aircraft type database"
+          git push

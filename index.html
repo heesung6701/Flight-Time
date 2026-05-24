@@ -178,8 +178,9 @@
           <button id="closeConfigButton" type="button" class="icon-button" aria-label="닫기">×</button>
         </div>
         <p class="config-help">
-          config 시트가 있으면 자동으로 읽고, 여기서 직접 수정할 수도 있습니다.
-          한 줄에 <strong>항공기번호 기종</strong> 형식으로 입력하세요. 예: <code>HL8329 B73M</code>
+          기본 config는 GitHub의 <code>data/aircraft-types.json</code>에서 자동으로 불러옵니다.
+          누락된 기번은 GitHub JSON에 추가하면 일일 배치가 AeroDataBox에서 기종을 채우고,
+          아래 입력값은 브라우저 local override로 우선 적용됩니다. 예: <code>HL8329 B73M</code>
         </p>
         <textarea id="configText" class="config-text" spellcheck="false" placeholder="HL8329	B73M&#10;HL8248	B738"></textarea>
         <div class="config-footer">
