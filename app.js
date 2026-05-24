@@ -10,12 +10,13 @@ import {
   inferArrivalDate,
   modifyRows,
   normalizePageSize,
+  numeric,
   parseAircraftConfigText,
   parseAircraftTypeMap,
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.12";
+} from "./src/core/flighttime-core.js?v=0.1.13";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
@@ -239,12 +240,21 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
-function cell(value, className = "") {
-  return `<td class="${className}">${escapeHtml(value)}</td>`;
+function escapeAttr(value) {
+  return escapeHtml(value).replaceAll("'", "&#39;");
 }
 
-function spanCell(value, colspan, className = "") {
-  return `<td colspan="${colspan}" class="${className}">${escapeHtml(value)}</td>`;
+function tooltipAttr(tooltip) {
+  const text = clean(tooltip);
+  return text ? ` title="${escapeAttr(text)}" aria-label="${escapeAttr(text)}"` : "";
+}
+
+function cell(value, className = "", tooltip = "") {
+  return `<td class="${className}"${tooltipAttr(tooltip)}>${escapeHtml(value)}</td>`;
+}
+
+function spanCell(value, colspan, className = "", tooltip = "") {
+  return `<td colspan="${colspan}" class="${className}"${tooltipAttr(tooltip)}>${escapeHtml(value)}</td>`;
 }
 
 function setLoaded(message) {
@@ -259,6 +269,77 @@ function buildModifiedRows() {
   });
   const maxPage = Math.max(Math.ceil(state.modifiedRows.length / state.effectivePageSize), 1);
   state.currentPage = Math.min(Math.max(state.currentPage, 1), maxPage);
+}
+
+function filteredOriginalRows() {
+  return state.originalRows.filter((original) => !["O", "EX", "2F"].includes(original.duty.toUpperCase()));
+}
+
+function sourceRowForOutputRow(row) {
+  return filteredOriginalRows()[row.id - 1] || null;
+}
+
+function durationFormula(value, label = "값") {
+  return `${label}: ${formatDuration(value) || "00:00"}`;
+}
+
+function sunWindowText(sunTimes) {
+  if (!sunTimes?.sunrise || !sunTimes?.sunset) return "일출/일몰 정보 없음";
+  return `일출 ${sunTimes.sunrise}, 일몰 ${sunTimes.sunset}${sunTimes.timezone ? ` (${sunTimes.timezone})` : ""}`;
+}
+
+function takeoffLandingTooltip(original, kind, value) {
+  if (!original) return "";
+  const isTakeoff = kind.includes("Takeoff");
+  const isNightColumn = kind.includes("night");
+  const airport = isTakeoff ? original.from : original.to;
+  const clock = isTakeoff ? original.ro : original.ri;
+  const date = isTakeoff ? clean(original.date) : inferArrivalDate(original.date, original.ro, original.ri);
+  const count = isTakeoff ? original.takeoff : original.landing;
+  const sunTimes = state.sunTimesByAirportDate[airportSunKey(airport, date)];
+  const column = `${isNightColumn ? "Night" : "Day"} ${isTakeoff ? "T/O" : "L/D"}`;
+  const displayed = displayTakeoffCount(value) || "blank";
+
+  if (sunTimes) {
+    return `${column}: ${airport} ${date} ${clock || "시간 없음"} 기준. ${sunWindowText(sunTimes)}와 비교해 ${isNightColumn ? "야간" : "주간"}이면 원본 count ${count || 0} 표시 → ${displayed}.`;
+  }
+
+  const hasNight = original.night > 0;
+  const nightEqualsBlock = hasNight && original.night === original.blockTime;
+  const isSpecial = /^\d+$/.test(clean(original.flightNo)) && (clean(original.flightNo)[0] === "0" || clean(original.flightNo)[0] === "1") && Number(original.flightNo) % 2 === 0;
+  if (!hasNight) return `${column}: Night 시간이 0이라 T/O·L/D를 주간으로 분류. 원본 count ${count || 0} → ${displayed}.`;
+  if (nightEqualsBlock) return `${column}: Night(${formatDuration(original.night)}) = B/T(${formatDuration(original.blockTime)})라 T/O·L/D를 야간으로 분류. 원본 count ${count || 0} → ${displayed}.`;
+  if (isSpecial) return `${column}: 편명 ${original.flightNo}는 0/1로 시작하는 짝수편이라 T/O는 야간, L/D는 주간으로 분류. 원본 count ${count || 0} → ${displayed}.`;
+  return `${column}: 일부 야간 비행이며 일반편이라 T/O는 주간, L/D는 야간으로 분류. 원본 count ${count || 0} → ${displayed}.`;
+}
+
+function rowTooltips(row) {
+  const original = sourceRowForOutputRow(row);
+  if (!original) return {};
+  const dayCondition = `${durationFormula(original.blockTime, "B/T")} - ${durationFormula(original.night, "Night")} = ${formatDuration(Math.max(original.blockTime - original.night, 0)) || "00:00"}`;
+  const fo = original.duty.toUpperCase() === "F"
+    ? `F/O: duty F라 B/T ${formatDuration(original.blockTime) || "00:00"} 전체 적용.`
+    : original.duty.toUpperCase() === "NF"
+      ? `F/O: duty NF라 B/T ${formatDuration(original.blockTime) || "00:00"} × 2/3 = ${formatDuration(row.fo) || "00:00"}.`
+      : `F/O: duty ${original.duty || "blank"}는 F/O 시간 없음.`;
+  return {
+    dayTakeoff: takeoffLandingTooltip(original, "dayTakeoff", row.dayTakeoff),
+    dayLanding: takeoffLandingTooltip(original, "dayLanding", row.dayLanding),
+    nightTakeoff: takeoffLandingTooltip(original, "nightTakeoff", row.nightTakeoff),
+    nightLanding: takeoffLandingTooltip(original, "nightLanding", row.nightLanding),
+    dayCondition: `Day condition: ${dayCondition}.`,
+    nightCondition: `Night condition: 원본 Night ${formatDuration(original.night) || "00:00"} 적용.`,
+    actualInst: `Actual Inst.: 원본 Inst. ${formatDuration(original.inst) || "00:00"} 적용.`,
+    blockTime: `B/T: 원본 Block Time ${formatDuration(original.blockTime) || "00:00"} 적용.`,
+    fo,
+  };
+}
+
+function totalTooltip(label, summary, rows, key, formatter = String) {
+  const includedRows = rows.filter((row) => numeric(row[key]));
+  const parts = includedRows.map((row) => `#${row.id} ${formatter(row[key]) || "00:00"}`);
+  const total = formatter(summary[key] || 0) || "00:00";
+  return `${label} ${key}: ${parts.length ? parts.join(" + ") : "계산할 값 없음"} = ${total}`;
 }
 
 function renderOutput() {
@@ -284,6 +365,7 @@ function renderOutput() {
     els.outputBody.appendChild(els.emptyRowTemplate.content.cloneNode(true));
   } else {
     page.rows.forEach((row) => {
+      const tooltips = rowTooltips(row);
       const tr = document.createElement("tr");
       tr.innerHTML = [
         cell(row.date),
@@ -292,18 +374,18 @@ function renderOutput() {
         cell(row.from),
         cell(row.to),
         cell(row.flightNo),
-        cell(displayTakeoffCount(row.dayTakeoff)),
-        cell(displayTakeoffCount(row.dayLanding)),
-        cell(displayTakeoffCount(row.nightTakeoff)),
-        cell(displayTakeoffCount(row.nightLanding)),
+        cell(displayTakeoffCount(row.dayTakeoff), "", tooltips.dayTakeoff),
+        cell(displayTakeoffCount(row.dayLanding), "", tooltips.dayLanding),
+        cell(displayTakeoffCount(row.nightTakeoff), "", tooltips.nightTakeoff),
+        cell(displayTakeoffCount(row.nightLanding), "", tooltips.nightLanding),
         cell(row.autoLand),
-        cell(formatDuration(row.dayCondition)),
-        cell(formatDuration(row.nightCondition)),
-        cell(formatDuration(row.actualInst)),
+        cell(formatDuration(row.dayCondition), "", tooltips.dayCondition),
+        cell(formatDuration(row.nightCondition), "", tooltips.nightCondition),
+        cell(formatDuration(row.actualInst), "", tooltips.actualInst),
         cell(row.instApp),
-        cell(formatDuration(row.blockTime)),
+        cell(formatDuration(row.blockTime), "", tooltips.blockTime),
         cell(formatDuration(row.pic)),
-        cell(formatDuration(row.fo)),
+        cell(formatDuration(row.fo), "", tooltips.fo),
         cell(row.otherPilot),
         cell(row.simulator),
         cell(row.flightInstructor),
@@ -320,30 +402,30 @@ function renderOutput() {
 
 function renderTotals(page) {
   const totals = [
-    ["PAGE TOTAL", page.pageTotal],
-    ["PREVIOUS TOTAL", page.previousTotal],
-    ["NEW TOTAL", page.newTotal],
+    ["PAGE TOTAL", page.pageTotal, page.rows],
+    ["PREVIOUS TOTAL", page.previousTotal, state.modifiedRows.slice(0, (page.page - 1) * state.effectivePageSize)],
+    ["NEW TOTAL", page.newTotal, state.modifiedRows.slice(0, (page.page - 1) * state.effectivePageSize + page.rows.length)],
   ];
   els.totalBody.innerHTML = totals
-    .map(([label, summary]) => {
+    .map(([label, summary, rows]) => {
       const cells = [
         cell(""),
         cell(""),
         cell(""),
         cell(""),
         spanCell(label, 2, "label-cell"),
-        cell(summary.dayTakeoff || ""),
-        cell(summary.dayLanding || ""),
-        cell(summary.nightTakeoff || ""),
-        cell(summary.nightLanding || ""),
+        cell(summary.dayTakeoff || "", "", totalTooltip(label, summary, rows, "dayTakeoff")),
+        cell(summary.dayLanding || "", "", totalTooltip(label, summary, rows, "dayLanding")),
+        cell(summary.nightTakeoff || "", "", totalTooltip(label, summary, rows, "nightTakeoff")),
+        cell(summary.nightLanding || "", "", totalTooltip(label, summary, rows, "nightLanding")),
         cell(""),
-        cell(formatDuration(summary.dayCondition)),
-        cell(formatDuration(summary.nightCondition)),
-        cell(formatDuration(summary.actualInst)),
+        cell(formatDuration(summary.dayCondition), "", totalTooltip(label, summary, rows, "dayCondition", formatDuration)),
+        cell(formatDuration(summary.nightCondition), "", totalTooltip(label, summary, rows, "nightCondition", formatDuration)),
+        cell(formatDuration(summary.actualInst), "", totalTooltip(label, summary, rows, "actualInst", formatDuration)),
         cell(""),
-        cell(formatDuration(summary.blockTime)),
+        cell(formatDuration(summary.blockTime), "", totalTooltip(label, summary, rows, "blockTime", formatDuration)),
         cell(""),
-        cell(formatDuration(summary.fo)),
+        cell(formatDuration(summary.fo), "", totalTooltip(label, summary, rows, "fo", formatDuration)),
         cell(""),
         cell(""),
         cell(""),

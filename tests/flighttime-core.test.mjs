@@ -302,8 +302,14 @@ test("renders zero takeoff counts as blank", () => {
 });
 
 test("wires landing counts through zero-blank display", () => {
-  assert.match(appJs, /cell\(displayTakeoffCount\(row\.dayLanding\)\)/);
-  assert.match(appJs, /cell\(displayTakeoffCount\(row\.nightLanding\)\)/);
+  assert.match(appJs, /displayTakeoffCount\(row\.dayLanding\)/);
+  assert.match(appJs, /displayTakeoffCount\(row\.nightLanding\)/);
+});
+
+test("adds calculation tooltips to output cells", () => {
+  assert.match(appJs, /function tooltipAttr/);
+  assert.match(appJs, /rowTooltips\(row\)/);
+  assert.match(appJs, /totalTooltip\(label, summary, rows, "blockTime"/);
 });
 
 test("builds validation report for upload harness", () => {
