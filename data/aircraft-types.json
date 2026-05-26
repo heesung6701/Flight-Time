@@ -1,31 +1,6 @@
 {
   "schemaVersion": 1,
   "description": "Aircraft registration to aircraft type database. Add registrations under aircraft.",
-  "updatedAt": "2026-05-26T08:25:05.393Z",
-  "aircraft": {
-    "HL8513": {
-      "registration": "HL8513",
-      "aircraftType": "B73M",
-      "source": "GitHub issue",
-      "updatedAt": "2026-05-26T08:25:05.392Z"
-    },
-    "HL8514": {
-      "registration": "HL8514",
-      "aircraftType": "B73M",
-      "source": "GitHub issue",
-      "updatedAt": "2026-05-26T08:25:05.392Z"
-    },
-    "HL8579": {
-      "registration": "HL8579",
-      "aircraftType": "B73M",
-      "source": "GitHub issue",
-      "updatedAt": "2026-05-26T08:25:05.392Z"
-    },
-    "HL8580": {
-      "registration": "HL8580",
-      "aircraftType": "B73M",
-      "source": "GitHub issue",
-      "updatedAt": "2026-05-26T08:25:05.392Z"
-    }
-  }
+  "updatedAt": "2026-05-26T08:32:40.953Z",
+  "aircraft": {}
 }
