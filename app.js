@@ -17,7 +17,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.23";
+} from "./src/core/flighttime-core.js?v=0.1.24";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
