@@ -31,9 +31,10 @@ body:
         Delete example:
         `HL8513`
       placeholder: |
-        HL8513 B73M
-        HL8737 B738
-        HL8211 A332
+        HL8513
+        HL8514
+        HL8579
+        HL8580
       render: tsv
     validations:
       required: true
