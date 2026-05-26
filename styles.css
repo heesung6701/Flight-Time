@@ -53,6 +53,15 @@ button {
   letter-spacing: 0.02em;
   box-shadow: 0 6px 18px rgba(20, 32, 52, 0.08);
   backdrop-filter: blur(6px);
+  cursor: pointer;
+  user-select: none;
+}
+
+.version-badge:hover,
+.version-badge:focus-visible {
+  border-color: rgba(15, 118, 110, 0.45);
+  color: var(--accent-dark);
+  outline: none;
 }
 
 .app-shell {

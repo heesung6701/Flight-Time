@@ -49,6 +49,15 @@ test("cache-busts browser modules with the package version", () => {
   assert.match(appJs, new RegExp(`from "\\./src/core/flighttime-core\\.js\\?v=${packageJson.version}"`));
 });
 
+test("lets the version badge force a fresh page request", () => {
+  assert.match(indexHtml, /class="version-badge"[^>]*role="button"/);
+  assert.match(indexHtml, /class="version-badge"[^>]*tabindex="0"/);
+  assert.match(appJs, /function reloadLatestVersion\(\)/);
+  assert.match(appJs, /searchParams\.set\("refresh", String\(Date\.now\(\)\)\)/);
+  assert.match(appJs, /versionBadge\?\.addEventListener\("click", reloadLatestVersion\)/);
+  assert.match(appJs, /versionBadge\?\.addEventListener\("keydown", handleVersionBadgeKeydown\)/);
+});
+
 test("starts from airline selection and keeps topbar airline switching available", () => {
   assert.match(indexHtml, /id="airlineGate"/);
   assert.match(indexHtml, /id="airlineCards"/);

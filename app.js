@@ -2,7 +2,7 @@ import {
   DEFAULT_AIRLINE_ID,
   airlineOptions,
   getAirline,
-} from "./src/core/airlines.js?v=0.1.45";
+} from "./src/core/airlines.js?v=0.1.48";
 import {
   DEFAULT_PAGE_SIZE,
   buildOutputPage,
@@ -22,7 +22,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.45";
+} from "./src/core/flighttime-core.js?v=0.1.48";
 
 const AIRLINE_STORAGE_KEY = "flightTimeSelectedAirline";
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
@@ -50,6 +50,7 @@ const state = {
 };
 
 const els = {
+  versionBadge: document.querySelector(".version-badge"),
   airlineGate: document.querySelector("#airlineGate"),
   appWorkspace: document.querySelector("#appWorkspace"),
   airlineCards: document.querySelector("#airlineCards"),
@@ -90,6 +91,18 @@ const els = {
   totalBody: document.querySelector("#totalBody"),
   emptyRowTemplate: document.querySelector("#emptyRowTemplate"),
 };
+
+function reloadLatestVersion() {
+  const nextUrl = new URL(window.location.href);
+  nextUrl.searchParams.set("refresh", String(Date.now()));
+  window.location.replace(nextUrl);
+}
+
+function handleVersionBadgeKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  reloadLatestVersion();
+}
 
 function loadSavedAirlineId() {
   try {
@@ -732,6 +745,8 @@ els.workbookInput.addEventListener("change", (event) => {
   }
 });
 
+els.versionBadge?.addEventListener("click", reloadLatestVersion);
+els.versionBadge?.addEventListener("keydown", handleVersionBadgeKeydown);
 els.airlineCards?.addEventListener("click", (event) => {
   const card = event.target.closest("[data-airline-id]");
   if (card) chooseAirline(card.dataset.airlineId);
