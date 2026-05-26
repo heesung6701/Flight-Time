@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { Analytics } from "@vercel/analytics/react";
 import App from "./App.jsx";
 import "../styles.css";
 
@@ -8,7 +9,12 @@ function Root() {
     import("./app-controller.js");
   }, []);
 
-  return <App />;
+  return (
+    <>
+      <App />
+      <Analytics />
+    </>
+  );
 }
 
 createRoot(document.getElementById("root")).render(
