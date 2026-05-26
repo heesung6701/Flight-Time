@@ -541,13 +541,42 @@ function totalTooltip(label, summary, rows, key, formatter = String) {
   return `${label} ${key}: ${parts.length ? parts.join(" + ") : "계산할 값 없음"} = ${total}`;
 }
 
+function excludedDutyDetails(report, airline) {
+  const excludedDuties = airline.excludedDuties || [];
+  return excludedDuties
+    .map((duty) => [duty, report.dutyCounts[duty] || 0])
+    .filter(([, count]) => count > 0)
+    .map(([duty, count]) => `${duty} ${count}건`);
+}
+
+function countDifferenceTooltip(report, airline) {
+  if (!report.originalCount) return "original 데이터를 불러오면 원본/출력 개수가 표시됩니다.";
+  if (!report.excludedCount) return `원본 ${report.originalCount}건이 모두 출력 대상입니다.`;
+  const details = excludedDutyDetails(report, airline);
+  const reason = details.length
+    ? `제외 Duty(${details.join(", ")})`
+    : `제외 Duty ${report.excludedCount}건`;
+  return `원본 ${report.originalCount}건 중 ${reason}를 제외해 출력 ${report.filteredCount}건입니다.`;
+}
+
+function setCountTooltip(element, tooltip) {
+  const text = clean(tooltip);
+  if (!element || !text) return;
+  element.title = text;
+  element.setAttribute("aria-label", text);
+}
+
 function renderOutput() {
   buildModifiedRows();
-  const report = buildValidationReport(state.originalRows, { airline: selectedAirline() });
+  const airline = selectedAirline();
+  const report = buildValidationReport(state.originalRows, { airline });
   const page = buildOutputPage(state.modifiedRows, state.currentPage, state.effectivePageSize);
+  const countTooltip = countDifferenceTooltip(report, airline);
 
   els.originalCount.textContent = report.originalCount;
   els.filteredCount.textContent = report.filteredCount;
+  setCountTooltip(els.originalCount, countTooltip);
+  setCountTooltip(els.filteredCount, countTooltip);
   els.pageCount.textContent = page.maxPage;
   els.pageRange.textContent = `page in 1~${page.maxPage}`;
   els.pageSizeSelect.value = String(state.pageSize);

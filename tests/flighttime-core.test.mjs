@@ -492,6 +492,13 @@ test("adds calculation tooltips to output cells", () => {
   assert.match(appJs, /totalTooltip\(label, summary, rows, "blockTime"/);
 });
 
+test("adds count difference tooltip to summary counts", () => {
+  assert.match(appJs, /function countDifferenceTooltip/);
+  assert.match(appJs, /excludedDutyDetails\(report, airline\)/);
+  assert.match(appJs, /setCountTooltip\(els\.originalCount, countTooltip\)/);
+  assert.match(appJs, /setCountTooltip\(els\.filteredCount, countTooltip\)/);
+});
+
 test("builds validation report for upload harness", () => {
   const originalRows = parseOriginalRows(parseTsv(fixture));
   const report = buildValidationReport(originalRows, { pageSize: 2 });
