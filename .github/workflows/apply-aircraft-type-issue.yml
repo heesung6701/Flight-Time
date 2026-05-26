@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   apply:
-    if: contains(github.event.issue.labels.*.name, 'aircraft-type-map')
+    if: contains(github.event.issue.labels.*.name, 'aircraft-type-map') || startsWith(github.event.issue.title, '[aircraft-type-map]') || contains(github.event.issue.body, '### Aircraft type map')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
