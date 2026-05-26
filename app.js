@@ -17,7 +17,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.34";
+} from "./src/core/flighttime-core.js?v=0.1.35";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
@@ -45,6 +45,7 @@ const state = {
 const els = {
   workbookInput: document.querySelector("#workbookInput"),
   pasteArea: document.querySelector("#pasteArea"),
+  clearDataButton: document.querySelector("#clearDataButton"),
   parsePasteButton: document.querySelector("#parsePasteButton"),
   configButton: document.querySelector("#configButton"),
   configDialog: document.querySelector("#configDialog"),
@@ -587,6 +588,18 @@ function handlePaste() {
   refreshSunTimes();
 }
 
+function handleClearData() {
+  state.rawOriginalRows = [];
+  state.originalRows = [];
+  state.modifiedRows = [];
+  state.currentPage = 1;
+  state.sunRequestToken += 1;
+  els.pasteArea.value = "";
+  els.workbookInput.value = "";
+  setLoaded("파일 대기 중");
+  renderOutput();
+}
+
 function changePage(nextPage) {
   const maxPage = Math.max(Math.ceil(state.modifiedRows.length / state.effectivePageSize), 1);
   state.currentPage = Math.min(Math.max(nextPage, 1), maxPage);
@@ -609,6 +622,7 @@ els.workbookInput.addEventListener("change", (event) => {
   }
 });
 
+els.clearDataButton.addEventListener("click", handleClearData);
 els.parsePasteButton.addEventListener("click", handlePaste);
 els.configButton.addEventListener("click", openConfigDialog);
 els.saveConfigButton.addEventListener("click", handleConfigSave);

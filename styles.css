@@ -149,6 +149,15 @@ button.secondary:hover {
   background: #111827;
 }
 
+button.ghost {
+  background: #e7edf5;
+  color: #253044;
+}
+
+button.ghost:hover {
+  background: #d9e0ea;
+}
+
 button.secondary-action {
   background: #203044;
 }
@@ -334,6 +343,13 @@ input:focus,
 select:focus {
   outline: 2px solid rgba(15, 118, 110, 0.2);
   border-color: var(--accent);
+}
+
+.input-actions {
+  display: grid;
+  grid-template-columns: minmax(82px, 0.42fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .stats-grid {
