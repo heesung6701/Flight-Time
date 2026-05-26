@@ -2,8 +2,9 @@ name: Update aircraft type database
 
 on:
   schedule:
-    # Daily at 03:10 KST. The batch only calls AeroDataBox for registrations
-    # that exist in data/aircraft-types.json and do not have aircraftType yet.
+    # Daily at 03:10 KST. The batch seeds registrations from the repository
+    # AIRCRAFT_REGISTRATIONS variable, then only calls AeroDataBox for entries
+    # that do not have aircraftType yet.
     - cron: "10 18 * * *"
   workflow_dispatch:
     inputs:
@@ -41,7 +42,7 @@ jobs:
       - name: Update aircraft type JSON from AeroDataBox
         env:
           AERODATABOX_API_KEY: ${{ secrets.AERODATABOX_API_KEY }}
-          AIRCRAFT_REGISTRATIONS: ${{ inputs.registrations }}
+          AIRCRAFT_REGISTRATIONS: ${{ inputs.registrations || vars.AIRCRAFT_REGISTRATIONS }}
           AERODATABOX_MAX_REQUESTS: ${{ inputs.max_requests || '25' }}
         run: npm run update:aircraft-types
 

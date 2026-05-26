@@ -118,6 +118,7 @@ test("build script publishes the aircraft type database with Pages assets", () =
 test("defines a scheduled aircraft type update workflow", () => {
   const workflow = fs.readFileSync(new URL("../.github/workflows/update-aircraft-types.yml", import.meta.url), "utf8");
   assert.match(workflow, /AERODATABOX_API_KEY/);
+  assert.match(workflow, /vars\.AIRCRAFT_REGISTRATIONS/);
   assert.match(workflow, /cron:/);
   assert.match(workflow, /contents: write/);
 });
