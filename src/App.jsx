@@ -172,12 +172,6 @@ export default function App() {
         </div>
       </main>
 
-      <template id="emptyRowTemplate">
-        <tr className="empty-row">
-          <td colSpan="24">original 데이터를 불러오면 output이 여기에 표시됩니다.</td>
-        </tr>
-      </template>
-
       <dialog id="configDialog" className="config-dialog" aria-labelledby="configDialogTitle">
         <form method="dialog" className="config-card">
           <div className="config-header">
