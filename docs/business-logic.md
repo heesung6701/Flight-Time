@@ -5,7 +5,8 @@
 기준 코드:
 
 - `src/core/flighttime-core.js`
-- `app.js`
+- `src/App.jsx`
+- `src/app-controller.js`
 
 ## 1. 입력 데이터
 

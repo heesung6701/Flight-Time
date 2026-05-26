@@ -101,7 +101,7 @@ For add/update, each row must include both registration and aircraft type. For d
 7. If data changed, the script bumps the app patch version and syncs:
    - `package.json`
    - `index.html`
-   - `app.js`
+   - `src/app-controller.js`
 8. The workflow commits and pushes the changed files.
 9. The workflow comments with the commit link, change summary, and final map.
 10. The workflow closes the issue with `completed` state reason.
@@ -113,7 +113,7 @@ The workflow commits only:
 - `data/aircraft-types.json`
 - `package.json`
 - `index.html`
-- `app.js`
+- `src/app-controller.js`
 
 The workflow must not commit private flight data, original spreadsheets, fixtures, or ignored files.
 

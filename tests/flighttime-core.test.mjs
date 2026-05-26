@@ -27,7 +27,7 @@ import {
 
 const fixture = fs.readFileSync(new URL("./fixtures/original-sample.tsv", import.meta.url), "utf8");
 const indexHtml = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
-const appJs = fs.readFileSync(new URL("../src/legacy-app.js", import.meta.url), "utf8");
+const appJs = fs.readFileSync(new URL("../src/app-controller.js", import.meta.url), "utf8");
 const appMarkup = fs.readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
 const mainJs = fs.readFileSync(new URL("../src/main.jsx", import.meta.url), "utf8");
 const stylesCss = fs.readFileSync(new URL("../styles.css", import.meta.url), "utf8");
@@ -51,7 +51,7 @@ test("uses Vite as the React browser entry point", () => {
   assert.match(indexHtml, /id="root"/);
   assert.match(indexHtml, /src="\/src\/main\.jsx"/);
   assert.match(mainJs, /createRoot/);
-  assert.match(mainJs, /import\("\.\/legacy-app\.js"\)/);
+  assert.match(mainJs, /import\("\.\/app-controller\.js"\)/);
   assert.match(appJs, /from "\.\/core\/airlines\.js"/);
   assert.match(appJs, /from "\.\/core\/flighttime-core\.js"/);
 });

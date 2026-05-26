@@ -12,4 +12,4 @@ flushSync(() => {
   );
 });
 
-import("./legacy-app.js");
+import("./app-controller.js");
