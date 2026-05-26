@@ -115,12 +115,9 @@ test("build script publishes the aircraft type database with Pages assets", () =
   assert.match(buildScript, /data\/aircraft-types\.json/);
 });
 
-test("defines a scheduled aircraft type update workflow", () => {
-  const workflow = fs.readFileSync(new URL("../.github/workflows/update-aircraft-types.yml", import.meta.url), "utf8");
-  assert.match(workflow, /AERODATABOX_API_KEY/);
-  assert.match(workflow, /vars\.AIRCRAFT_REGISTRATIONS/);
-  assert.match(workflow, /cron:/);
-  assert.match(workflow, /contents: write/);
+test("does not expose a client-side aircraft lookup API key", () => {
+  assert.doesNotMatch(appJs, /RapidAPI|AERODATABOX|X-RapidAPI-Key/);
+  assert.doesNotMatch(indexHtml, /AeroDataBox|RapidAPI/);
 });
 
 test("calculates B/T and F/O from duty using full F block time and rounded two thirds NF block time", () => {

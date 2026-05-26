@@ -62,13 +62,10 @@
 1. 기본 config DB는 GitHub의 `data/aircraft-types.json`입니다.
    - 화면 로드 시 이 JSON을 fetch해서 `A/C No → aircraftType` 매핑으로 사용합니다.
    - GitHub Pages 빌드 산출물에도 포함됩니다.
-2. 일일 GitHub Actions 배치가 `data/aircraft-types.json`에서 `aircraftType`이 비어 있는 기번을 AeroDataBox `GET /aircrafts/reg/{registration}` API로 조회합니다.
-   - 조회 성공 시 `aircraftType`은 AeroDataBox의 `icaoCode`를 우선 사용합니다.
-   - 변경이 있으면 Action이 JSON 변경분을 커밋/푸시합니다.
-3. 웹사이트의 `Config` 버튼 팝업에서 브라우저별 local override를 입력할 수 있습니다.
+2. 웹사이트의 `Config` 버튼 팝업에서 브라우저별 local override를 입력할 수 있습니다.
    - local override는 GitHub DB보다 우선 적용됩니다.
    - 저장 위치는 브라우저 `localStorage`입니다.
-4. 업로드한 workbook에 `config`/`Config` 시트가 있으면 해당 매핑도 읽어서 local override로 저장합니다.
+3. 업로드한 workbook에 `config`/`Config` 시트가 있으면 해당 매핑도 읽어서 local override로 저장합니다.
 
 ## 2. 공통 변환 규칙
 

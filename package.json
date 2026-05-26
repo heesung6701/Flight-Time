@@ -1,12 +1,11 @@
 {
   "name": "flight-time-logbook",
-  "version": "0.1.19",
+  "version": "0.1.20",
   "private": true,
   "type": "module",
   "scripts": {
     "build:pages": "node scripts/build-pages.mjs",
     "start": "python3 -m http.server 4173",
-    "test": "node --test tests/*.test.mjs",
-    "update:aircraft-types": "node scripts/update-aircraft-types.mjs"
+    "test": "node --test tests/*.test.mjs"
   }
 }
