@@ -268,7 +268,12 @@ button.secondary-action:hover {
   background: #fff8ec;
 }
 
-.config-highlight .is-delta {
+.config-highlight .is-add {
+  color: #166534;
+  background: #ecfdf3;
+}
+
+.config-highlight .is-update {
   color: #9f1239;
   background: #fff1f2;
 }
@@ -290,6 +295,37 @@ button.secondary-action:hover {
 .config-text::selection {
   background: rgba(47, 123, 118, 0.22);
   color: transparent;
+}
+
+.config-delta-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+  margin-top: -4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.config-delta-preview span {
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #edf2f7;
+}
+
+.config-delta-preview .is-add {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.config-delta-preview .is-update {
+  color: #9f1239;
+  background: #ffe4e6;
+}
+
+.config-delta-preview .empty {
+  background: transparent;
+  padding-left: 0;
 }
 
 .config-footer span {

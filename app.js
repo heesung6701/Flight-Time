@@ -17,7 +17,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.37";
+} from "./src/core/flighttime-core.js?v=0.1.39";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
@@ -51,6 +51,7 @@ const els = {
   configDialog: document.querySelector("#configDialog"),
   configText: document.querySelector("#configText"),
   configHighlight: document.querySelector("#configHighlight"),
+  configDeltaPreview: document.querySelector("#configDeltaPreview"),
   configStatus: document.querySelector("#configStatus"),
   saveConfigButton: document.querySelector("#saveConfigButton"),
   requestDbUpdateButton: document.querySelector("#requestDbUpdateButton"),
@@ -243,6 +244,13 @@ function localConfigDelta() {
     .sort(([left], [right]) => clean(left).localeCompare(clean(right)));
 }
 
+function configDraftDelta() {
+  return Object.entries(parseAircraftConfigText(els.configText?.value || ""))
+    .filter(([registration, aircraftType]) => clean(registration) && clean(aircraftType))
+    .filter(([registration, aircraftType]) => state.aircraftTypeDb[registration] !== aircraftType)
+    .sort(([left], [right]) => clean(left).localeCompare(clean(right)));
+}
+
 function updateConfigStatus() {
   if (els.configStatus) {
     const source = state.aircraftTypeDbLoaded ? "GitHub DB + local" : "local";
@@ -265,17 +273,37 @@ function renderConfigHighlight() {
       const registration = clean(registrationValue).toUpperCase();
       const aircraftType = clean(typeValue).toUpperCase();
       const isComplete = registration && aircraftType;
-      const isSavedLocal = Boolean(state.localAircraftTypes[registration]);
-      const isDraftDelta = isComplete && state.aircraftTypeDb[registration] !== aircraftType;
-      const className = isDraftDelta ? "is-delta" : isSavedLocal ? "is-local" : "";
+      const dbType = state.aircraftTypeDb[registration];
+      const isAdd = isComplete && !dbType;
+      const isUpdate = isComplete && dbType && dbType !== aircraftType;
+      const className = isAdd ? "is-add" : isUpdate ? "is-update" : "";
       const safeLine = escapeHtml(line || " ");
       return `<span class="${className}">${safeLine}</span>`;
     })
     .join("\n");
+  renderConfigDeltaPreview();
+}
+
+function renderConfigDeltaPreview() {
+  if (!els.configDeltaPreview) return;
+  const delta = configDraftDelta();
+  if (!delta.length) {
+    els.configDeltaPreview.innerHTML = '<span class="empty">추가/수정 요청할 local 변경사항이 없습니다.</span>';
+    return;
+  }
+  els.configDeltaPreview.innerHTML = delta
+    .map(([registration, aircraftType]) => {
+      const dbType = state.aircraftTypeDb[registration];
+      const label = dbType ? "수정" : "추가";
+      const detail = dbType ? `${dbType} → ${aircraftType}` : aircraftType;
+      const className = dbType ? "is-update" : "is-add";
+      return `<span class="${className}"><strong>${escapeHtml(label)}</strong> ${escapeHtml(registration)} ${escapeHtml(detail)}</span>`;
+    })
+    .join("");
 }
 
 function openConfigDialog() {
-  els.configText.value = serializeAircraftTypeMap(state.aircraftTypes);
+  els.configText.value = serializeAircraftTypeMap(state.localAircraftTypes);
   renderConfigHighlight();
   updateConfigStatus();
   if (typeof els.configDialog.showModal === "function") {
@@ -294,13 +322,16 @@ function closeConfigDialog() {
 }
 
 function handleConfigSave() {
-  state.localAircraftTypes = localOverridesFromEffectiveMap(parseAircraftConfigText(els.configText.value));
+  state.localAircraftTypes = localOverridesFromEffectiveMap({
+    ...state.localAircraftTypes,
+    ...parseAircraftConfigText(els.configText.value),
+  });
   refreshEffectiveAircraftTypes();
   saveAircraftTypes();
   refreshOriginalRows();
   updateConfigStatus();
   renderConfigHighlight();
-  setLoaded(`config ${configCount()}개 적용됨`);
+  setLoaded(`local config ${localConfigDelta().length}개 적용됨`);
   renderOutput();
   closeConfigDialog();
 }

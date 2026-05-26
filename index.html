@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
   <body>
-    <div class="version-badge" aria-label="version">v0.1.37</div>
+    <div class="version-badge" aria-label="version">v0.1.39</div>
     <main class="app-shell">
       <section class="topbar">
         <div>
@@ -30,14 +30,14 @@
 
           <label class="file-button input-load-button">
             <input id="workbookInput" type="file" accept=".xlsx,.xls,.csv" />
-            <span>original 불러오기</span>
+            <span>파일 불러오기</span>
           </label>
 
           <label class="field">
-            <span>original 붙여넣기</span>
+            <span>붙여넣기</span>
             <textarea
               id="pasteArea"
-              placeholder="CPS 엑셀의 original 영역만 복사해서 붙여넣을 수 있습니다. 파일 업로드가 가능하면 이 칸은 비워도 됩니다."
+              placeholder="CPS 엑셀의 입력 영역을 복사해서 붙여넣을 수 있습니다. 파일 업로드가 가능하면 이 칸은 비워도 됩니다."
             ></textarea>
           </label>
           <div class="input-actions">
@@ -189,6 +189,7 @@
           <pre id="configHighlight" class="config-highlight" aria-hidden="true"></pre>
           <textarea id="configText" class="config-text" spellcheck="false" placeholder="HL8329	B73M&#10;HL8248	B738"></textarea>
         </div>
+        <div id="configDeltaPreview" class="config-delta-preview" aria-label="DB 업데이트 요청 미리보기"></div>
         <div class="config-footer">
           <span id="configStatus">현재 0개 등록</span>
           <div class="config-actions">
@@ -199,6 +200,6 @@
       </form>
     </dialog>
 
-    <script type="module" src="./app.js?v=0.1.37"></script>
+    <script type="module" src="./app.js?v=0.1.39"></script>
   </body>
 </html>
