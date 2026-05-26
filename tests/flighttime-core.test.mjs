@@ -117,8 +117,8 @@ test("fills the direct input dialog apply button width", () => {
   assert.match(stylesCss, /\.manual-input-actions button\s*{[^}]*width:\s*100%/s);
 });
 
-test("stacks input mode buttons at full width", () => {
-  assert.match(stylesCss, /\.input-mode-actions\s*{[^}]*grid-template-columns:\s*1fr/s);
+test("places input mode buttons in one row at full width", () => {
+  assert.match(stylesCss, /\.input-mode-actions\s*{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/s);
   assert.match(stylesCss, /\.input-mode-actions \.file-button\s*{[^}]*width:\s*100%/s);
   assert.match(stylesCss, /\.input-mode-actions button\s*{[^}]*width:\s*100%/s);
 });
