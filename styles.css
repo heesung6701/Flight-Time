@@ -419,8 +419,32 @@ button.secondary-action:hover {
 
 .config-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.text-link-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-dark);
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.text-link-button:hover {
+  background: transparent;
+  color: #111827;
+}
+
+.text-link-button:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  text-decoration: none;
 }
 
 .workspace {
