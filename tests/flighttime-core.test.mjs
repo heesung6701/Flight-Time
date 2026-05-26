@@ -128,6 +128,7 @@ test("defines an aircraft type map issue automation", () => {
   assert.match(issueTemplate, /aircraft-type-map/);
   assert.match(issueTemplate, /Change type/);
   assert.match(issueTemplate, /Aircraft type map/);
+  assert.match(issueTemplate, /For delete, enter one registration per row/);
   assert.match(workflow, /issues:/);
   assert.match(workflow, /aircraft-type-map/);
   assert.match(workflow, /Detect and label aircraft type issue/);

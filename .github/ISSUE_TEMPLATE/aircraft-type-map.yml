@@ -8,7 +8,8 @@ body:
     attributes:
       value: |
         Use this form to update `data/aircraft-types.json`.
-        The automation accepts tab, comma, or whitespace separated rows.
+        For add/update, enter one `registration type` pair per row.
+        For delete, enter one registration per row.
   - type: dropdown
     id: change_type
     attributes:
@@ -23,7 +24,12 @@ body:
     id: aircraft_type_map
     attributes:
       label: Aircraft type map
-      description: For add/update, enter `registration type`. For delete, registration-only rows are enough.
+      description: |
+        Add/update example:
+        `HL8513 B73M`
+
+        Delete example:
+        `HL8513`
       placeholder: |
         HL8513 B73M
         HL8737 B738
