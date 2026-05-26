@@ -5,6 +5,8 @@ import path from "node:path";
 const root = process.cwd();
 const dbPath = path.join(root, "data", "aircraft-types.json");
 const packagePath = path.join(root, "package.json");
+const packageLockPath = path.join(root, "package-lock.json");
+const indexPath = path.join(root, "index.html");
 const summaryPath = process.env.AIRCRAFT_TYPE_ISSUE_SUMMARY || path.join(root, "aircraft-type-issue-summary.json");
 
 function normalizeRegistration(value) {
@@ -101,6 +103,18 @@ async function bumpAppVersion() {
   const packageJson = await readJson(packagePath, {});
   packageJson.version = bumpPatch(packageJson.version);
   await fs.writeFile(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
+
+  const packageLock = await readJson(packageLockPath, null);
+  if (packageLock) {
+    packageLock.version = packageJson.version;
+    if (packageLock.packages?.[""]) {
+      packageLock.packages[""].version = packageJson.version;
+    }
+    await fs.writeFile(packageLockPath, `${JSON.stringify(packageLock, null, 2)}\n`);
+  }
+
+  const indexHtml = await fs.readFile(indexPath, "utf8");
+  await fs.writeFile(indexPath, indexHtml.replace(/v\d+\.\d+\.\d+/, `v${packageJson.version}`));
 }
 
 async function main() {

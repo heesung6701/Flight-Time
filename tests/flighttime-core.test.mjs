@@ -33,6 +33,9 @@ const mainJs = fs.readFileSync(new URL("../src/main.jsx", import.meta.url), "utf
 const stylesCss = fs.readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const issueApiJs = fs.readFileSync(new URL("../api/aircraft-type-issue.js", import.meta.url), "utf8");
 const packageJson = JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+const packageLock = JSON.parse(fs.readFileSync(new URL("../package-lock.json", import.meta.url), "utf8"));
+const aircraftIssueWorkflow = fs.readFileSync(new URL("../.github/workflows/apply-aircraft-type-issue.yml", import.meta.url), "utf8");
+const aircraftIssueScript = fs.readFileSync(new URL("../scripts/apply-aircraft-type-issue.mjs", import.meta.url), "utf8");
 
 const agentRules = fs.readFileSync(new URL("../AGENTS.md", import.meta.url), "utf8");
 
@@ -46,6 +49,18 @@ test("shows the package version in a screen corner", () => {
   assert.match(appMarkup, /className="version-badge"/);
   assert.match(appMarkup, /v\{packageJson\.version\}/);
   assert.match(appMarkup, /import packageJson from "\.\.\/package\.json"/);
+  assert.match(indexHtml, new RegExp(`v${packageJson.version.replaceAll(".", "\\.")}`));
+  assert.equal(packageLock.version, packageJson.version);
+  assert.equal(packageLock.packages[""].version, packageJson.version);
+});
+
+test("aircraft type issue automation commits only existing versioned files", () => {
+  assert.match(aircraftIssueWorkflow, /package-lock\.json/);
+  assert.doesNotMatch(aircraftIssueWorkflow, /app\.js/);
+  assert.match(aircraftIssueScript, /const packageLockPath/);
+  assert.match(aircraftIssueScript, /const indexPath/);
+  assert.match(aircraftIssueScript, /packageLock\.packages\[""\]\.version = packageJson\.version/);
+  assert.match(aircraftIssueScript, /replace\(\/v\\d\+\\\.\\d\+\\\.\\d\+\//);
 });
 
 test("uses Vite as the React browser entry point", () => {
@@ -250,9 +265,12 @@ test("defines an aircraft type map issue automation", () => {
   assert.match(workflow, /steps\.commit\.outputs\.sha/);
   assert.match(workflow, /Final map/);
   assert.match(workflow, /aircraft-type-issue-summary\.json/);
-  assert.match(workflow, /data\/aircraft-types\.json package\.json index\.html app\.js/);
+  assert.match(workflow, /data\/aircraft-types\.json package\.json package-lock\.json index\.html/);
+  assert.doesNotMatch(workflow, /app\.js/);
   assert.match(script, /GITHUB_EVENT_PATH/);
   assert.match(script, /bumpAppVersion/);
+  assert.match(script, /packageLockPath/);
+  assert.match(script, /indexPath/);
   assert.match(script, /writeSummary/);
 });
 
