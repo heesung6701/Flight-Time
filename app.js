@@ -17,7 +17,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.35";
+} from "./src/core/flighttime-core.js?v=0.1.37";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
@@ -50,7 +50,7 @@ const els = {
   configButton: document.querySelector("#configButton"),
   configDialog: document.querySelector("#configDialog"),
   configText: document.querySelector("#configText"),
-  configPreview: document.querySelector("#configPreview"),
+  configHighlight: document.querySelector("#configHighlight"),
   configStatus: document.querySelector("#configStatus"),
   saveConfigButton: document.querySelector("#saveConfigButton"),
   requestDbUpdateButton: document.querySelector("#requestDbUpdateButton"),
@@ -256,34 +256,27 @@ function updateConfigStatus() {
   }
 }
 
-function renderConfigPreview() {
-  if (!els.configPreview) return;
-  const rows = Object.entries(state.aircraftTypes)
-    .filter(([registration, aircraftType]) => clean(registration) && clean(aircraftType))
-    .sort(([left], [right]) => clean(left).localeCompare(clean(right)));
-
-  if (!rows.length) {
-    els.configPreview.innerHTML = '<div class="config-preview-empty">등록된 config가 없습니다.</div>';
-    return;
-  }
-
-  els.configPreview.innerHTML = rows
-    .map(([registration, aircraftType]) => {
-      const localType = state.localAircraftTypes[registration];
-      const dbType = state.aircraftTypeDb[registration];
-      const isLocal = Boolean(localType);
-      const isDelta = isLocal && dbType !== localType;
-      const source = isLocal ? (isDelta ? "local 변경" : "local 동일") : "GitHub DB";
-      const dbNote = isDelta && dbType ? ` · DB ${dbType}` : "";
-      const className = `config-preview-row${isLocal ? " is-local" : ""}${isDelta ? " is-delta" : ""}`;
-      return `<div class="${className}"><span>${escapeHtml(registration)}</span><strong>${escapeHtml(aircraftType)}</strong><em>${escapeHtml(source + dbNote)}</em></div>`;
+function renderConfigHighlight() {
+  if (!els.configHighlight || !els.configText) return;
+  const lines = els.configText.value.split(/\r?\n/);
+  els.configHighlight.innerHTML = lines
+    .map((line) => {
+      const [registrationValue, typeValue = ""] = line.trim().split(/[\t, ]+/);
+      const registration = clean(registrationValue).toUpperCase();
+      const aircraftType = clean(typeValue).toUpperCase();
+      const isComplete = registration && aircraftType;
+      const isSavedLocal = Boolean(state.localAircraftTypes[registration]);
+      const isDraftDelta = isComplete && state.aircraftTypeDb[registration] !== aircraftType;
+      const className = isDraftDelta ? "is-delta" : isSavedLocal ? "is-local" : "";
+      const safeLine = escapeHtml(line || " ");
+      return `<span class="${className}">${safeLine}</span>`;
     })
-    .join("");
+    .join("\n");
 }
 
 function openConfigDialog() {
   els.configText.value = serializeAircraftTypeMap(state.aircraftTypes);
-  renderConfigPreview();
+  renderConfigHighlight();
   updateConfigStatus();
   if (typeof els.configDialog.showModal === "function") {
     els.configDialog.showModal();
@@ -306,7 +299,7 @@ function handleConfigSave() {
   saveAircraftTypes();
   refreshOriginalRows();
   updateConfigStatus();
-  renderConfigPreview();
+  renderConfigHighlight();
   setLoaded(`config ${configCount()}개 적용됨`);
   renderOutput();
   closeConfigDialog();
@@ -627,6 +620,11 @@ els.parsePasteButton.addEventListener("click", handlePaste);
 els.configButton.addEventListener("click", openConfigDialog);
 els.saveConfigButton.addEventListener("click", handleConfigSave);
 els.requestDbUpdateButton.addEventListener("click", handleDbUpdateRequest);
+els.configText.addEventListener("input", renderConfigHighlight);
+els.configText.addEventListener("scroll", () => {
+  els.configHighlight.scrollTop = els.configText.scrollTop;
+  els.configHighlight.scrollLeft = els.configText.scrollLeft;
+});
 els.closeConfigButton.addEventListener("click", closeConfigDialog);
 els.configDialog.addEventListener("click", (event) => {
   if (event.target === els.configDialog) closeConfigDialog();

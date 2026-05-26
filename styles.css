@@ -135,6 +135,15 @@ button {
   white-space: nowrap;
 }
 
+.input-load-button {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.input-load-button span {
+  width: 100%;
+}
+
 button:hover,
 .file-button span:hover {
   background: var(--accent-dark);
@@ -223,58 +232,64 @@ button.secondary-action:hover {
   font-weight: 800;
 }
 
-.config-text {
-  min-height: 180px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+.config-editor {
+  position: relative;
+  min-height: 280px;
 }
 
-.config-preview {
-  max-height: 220px;
-  overflow: auto;
-  border: 1px solid #dbe7e5;
+.config-text,
+.config-highlight {
+  min-height: 280px;
+  margin: 0;
+  padding: 12px;
   border-radius: 8px;
+  font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0;
+  white-space: pre-wrap;
+  overflow: auto;
+}
+
+.config-highlight {
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
   background: #f8fbfb;
-}
-
-.config-preview-row {
-  display: grid;
-  grid-template-columns: minmax(90px, 1fr) minmax(64px, 0.7fr) minmax(110px, 1.3fr);
-  gap: 10px;
-  align-items: center;
-  padding: 7px 10px;
-  border-bottom: 1px solid #e5eeee;
   color: var(--text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size: 12px;
+  pointer-events: none;
 }
 
-.config-preview-row:last-child {
-  border-bottom: 0;
+.config-highlight span {
+  display: block;
+  min-height: 18px;
 }
 
-.config-preview-row.is-local {
+.config-highlight .is-local {
   color: #8a4b00;
   background: #fff8ec;
 }
 
-.config-preview-row.is-delta {
+.config-highlight .is-delta {
   color: #9f1239;
   background: #fff1f2;
 }
 
-.config-preview-row strong {
-  font-weight: 900;
+.config-text {
+  position: absolute;
+  inset: 0;
+  resize: none;
+  color: transparent;
+  caret-color: var(--text);
+  background: transparent;
+  z-index: 1;
 }
 
-.config-preview-row em,
-.config-preview-empty {
-  color: var(--muted);
-  font-style: normal;
+.config-text::placeholder {
+  color: #8c9aa7;
 }
 
-.config-preview-empty {
-  padding: 12px;
-  font-size: 13px;
+.config-text::selection {
+  background: rgba(47, 123, 118, 0.22);
+  color: transparent;
 }
 
 .config-footer span {

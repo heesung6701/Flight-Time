@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
   <body>
-    <div class="version-badge" aria-label="version">v0.1.35</div>
+    <div class="version-badge" aria-label="version">v0.1.37</div>
     <main class="app-shell">
       <section class="topbar">
         <div>
@@ -16,10 +16,6 @@
           <h1>Flight Time Output</h1>
         </div>
         <div class="actions">
-          <label class="file-button">
-            <input id="workbookInput" type="file" accept=".xlsx,.xls,.csv" />
-            <span>original 불러오기</span>
-          </label>
           <button id="configButton" type="button" class="secondary-action" title="항공기번호별 기종 설정">Config</button>
           <button id="printButton" type="button" title="Print output">Print</button>
         </div>
@@ -31,6 +27,11 @@
             <h2>Input</h2>
             <span id="loadState">파일 대기 중</span>
           </div>
+
+          <label class="file-button input-load-button">
+            <input id="workbookInput" type="file" accept=".xlsx,.xls,.csv" />
+            <span>original 불러오기</span>
+          </label>
 
           <label class="field">
             <span>original 붙여넣기</span>
@@ -184,8 +185,10 @@
           기본 config는 GitHub의 <code>data/aircraft-types.json</code>에서 자동으로 불러옵니다.
           아래 입력값은 브라우저 local override로 우선 적용됩니다. 예: <code>HL8329 B73M</code>
         </p>
-        <textarea id="configText" class="config-text" spellcheck="false" placeholder="HL8329	B73M&#10;HL8248	B738"></textarea>
-        <div id="configPreview" class="config-preview" aria-label="현재 적용 중인 항공기번호 기종 목록"></div>
+        <div class="config-editor">
+          <pre id="configHighlight" class="config-highlight" aria-hidden="true"></pre>
+          <textarea id="configText" class="config-text" spellcheck="false" placeholder="HL8329	B73M&#10;HL8248	B738"></textarea>
+        </div>
         <div class="config-footer">
           <span id="configStatus">현재 0개 등록</span>
           <div class="config-actions">
@@ -196,6 +199,6 @@
       </form>
     </dialog>
 
-    <script type="module" src="./app.js?v=0.1.35"></script>
+    <script type="module" src="./app.js?v=0.1.37"></script>
   </body>
 </html>

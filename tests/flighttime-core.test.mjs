@@ -56,7 +56,7 @@ test("provides a config button and editable aircraft mapping popup", () => {
   assert.match(indexHtml, /id="configButton"/);
   assert.match(indexHtml, /id="configDialog"/);
   assert.match(indexHtml, /id="configText"/);
-  assert.match(indexHtml, /id="configPreview"/);
+  assert.match(indexHtml, /id="configHighlight"/);
   assert.match(indexHtml, /id="requestDbUpdateButton"/);
   assert.match(indexHtml, /항공기번호/);
 });
@@ -64,6 +64,7 @@ test("provides a config button and editable aircraft mapping popup", () => {
 test("builds a GitHub issue request for local aircraft config deltas", () => {
   assert.match(appJs, /AIRCRAFT_TYPE_ISSUE_URL/);
   assert.match(appJs, /localConfigDelta/);
+  assert.match(appJs, /renderConfigHighlight/);
   assert.match(appJs, /Add or update registrations/);
   assert.match(appJs, /window\.open\(buildDbUpdateIssueUrl\(\)/);
 });
