@@ -12,6 +12,7 @@ import {
   formatDuration,
   inferArrivalDate,
   isClockNight,
+  parseDuration,
   parseClockMinutes,
   modifyRows,
   normalizePageSize,
@@ -47,6 +48,12 @@ test("cache-busts browser modules with the package version", () => {
   assert.match(indexHtml, new RegExp(`src="\\./app\\.js\\?v=${packageJson.version}"`));
   assert.match(appJs, new RegExp(`from "\\./src/core/airlines\\.js\\?v=${packageJson.version}"`));
   assert.match(appJs, new RegExp(`from "\\./src/core/flighttime-core\\.js\\?v=${packageJson.version}"`));
+});
+
+test("parses Korean duration strings emitted by formatted Excel cells", () => {
+  assert.equal(parseDuration("1시간 14분"), 74);
+  assert.equal(parseDuration("1시간"), 60);
+  assert.equal(parseDuration("14분"), 14);
 });
 
 test("lets the version badge force a fresh page request", () => {

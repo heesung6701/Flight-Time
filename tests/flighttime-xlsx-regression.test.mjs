@@ -16,6 +16,7 @@ import {
 
 const workbookPath = process.env.FLIGHTTIME_XLSX_PATH || path.join(os.homedir(), "Downloads", "flighttime.xlsx");
 const extractorPath = new URL("./harness/extract-xlsx-json.py", import.meta.url).pathname;
+const requiredWorkbookSheets = ["original", "config", "output"];
 
 function loadWorkbookSheets(sheetNames) {
   const output = execFileSync("python3", [extractorPath, workbookPath, ...sheetNames], {
@@ -23,6 +24,25 @@ function loadWorkbookSheets(sheetNames) {
     maxBuffer: 20 * 1024 * 1024,
   });
   return JSON.parse(output);
+}
+
+function workbookHasRequiredSheets() {
+  if (!fs.existsSync(workbookPath)) return false;
+  try {
+    const output = execFileSync("python3", ["-c", `
+from zipfile import ZipFile
+from xml.etree import ElementTree as ET
+import sys
+ns = {'a': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+with ZipFile(sys.argv[1]) as archive:
+    root = ET.fromstring(archive.read('xl/workbook.xml'))
+    print('\\n'.join(sheet.attrib['name'] for sheet in root.find('a:sheets', ns)))
+`, workbookPath], { encoding: "utf8" });
+    const available = new Set(output.trim().split(/\n/).filter(Boolean));
+    return requiredWorkbookSheets.every((sheetName) => available.has(sheetName));
+  } catch {
+    return false;
+  }
 }
 
 function countValue(value) {
@@ -85,8 +105,8 @@ function comparableOutputRow(row) {
   };
 }
 
-test("matches the filled output page from the private flighttime workbook", { skip: !fs.existsSync(workbookPath) }, () => {
-  const sheets = loadWorkbookSheets(["original", "config", "output"]);
+test("matches the filled output page from the private flighttime workbook", { skip: !workbookHasRequiredSheets() }, () => {
+  const sheets = loadWorkbookSheets(requiredWorkbookSheets);
   const aircraftTypes = parseAircraftTypeMap(sheets.config);
   const originalRows = parseOriginalRows(sheets.original, { aircraftTypes });
   const modifiedRows = modifyRows(originalRows, { pageSize: 19 });

@@ -40,8 +40,11 @@ export function parseDuration(value, dateParser) {
     if (parsed) return parsed.hours * 60 + parsed.minutes;
   }
   const match = text.match(/^(-?\d+):(\d{1,2})$/);
-  if (!match) return 0;
-  return Number(match[1]) * 60 + Number(match[2]);
+  if (match) return Number(match[1]) * 60 + Number(match[2]);
+  const koreanMatch = text.match(/^(-?\d+)\s*시간(?:\s*(\d{1,2})\s*분)?$|^(-?\d+)\s*분$/);
+  if (!koreanMatch) return 0;
+  if (koreanMatch[3] !== undefined) return Number(koreanMatch[3]);
+  return Number(koreanMatch[1]) * 60 + Number(koreanMatch[2] || 0);
 }
 
 export function formatDuration(minutes) {
