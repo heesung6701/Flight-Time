@@ -17,12 +17,13 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.32";
+} from "./src/core/flighttime-core.js?v=0.1.34";
 
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
 const SUN_CACHE_KEY = "flightTimeSunTimesUtcByAirportDate";
 const AIRCRAFT_TYPE_DB_URL = "./data/aircraft-types.json";
+const AIRCRAFT_TYPE_ISSUE_URL = "https://github.com/heesung6701/Flight-Time/issues/new";
 const AIRPORT_DATA_URL = "https://raw.githubusercontent.com/mwgg/Airports/master/airports.json";
 const SUN_API_URL = "https://api.sunrisesunset.io/json";
 
@@ -30,6 +31,8 @@ const state = {
   rawOriginalRows: [],
   originalRows: [],
   modifiedRows: [],
+  aircraftTypeDb: {},
+  localAircraftTypes: loadSavedAircraftTypes(),
   aircraftTypes: loadSavedAircraftTypes(),
   aircraftTypeDbLoaded: false,
   currentPage: 1,
@@ -46,8 +49,10 @@ const els = {
   configButton: document.querySelector("#configButton"),
   configDialog: document.querySelector("#configDialog"),
   configText: document.querySelector("#configText"),
+  configPreview: document.querySelector("#configPreview"),
   configStatus: document.querySelector("#configStatus"),
   saveConfigButton: document.querySelector("#saveConfigButton"),
+  requestDbUpdateButton: document.querySelector("#requestDbUpdateButton"),
   closeConfigButton: document.querySelector("#closeConfigButton"),
   printButton: document.querySelector("#printButton"),
   loadState: document.querySelector("#loadState"),
@@ -94,6 +99,21 @@ function loadSavedJson(key, fallback) {
   }
 }
 
+function refreshEffectiveAircraftTypes() {
+  state.aircraftTypes = {
+    ...state.aircraftTypeDb,
+    ...state.localAircraftTypes,
+  };
+}
+
+function localOverridesFromEffectiveMap(effectiveMap) {
+  return Object.fromEntries(
+    Object.entries(effectiveMap)
+      .filter(([registration, aircraftType]) => clean(registration) && clean(aircraftType))
+      .filter(([registration, aircraftType]) => state.aircraftTypeDb[registration] !== aircraftType),
+  );
+}
+
 function saveJson(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
@@ -106,10 +126,9 @@ async function loadAircraftTypeDatabase() {
   const response = await fetch(`${AIRCRAFT_TYPE_DB_URL}?v=${Date.now()}`, { cache: "no-store" });
   if (!response.ok) throw new Error(`aircraft type db ${response.status}`);
   const dbMap = parseAircraftTypeDatabase(await response.json());
-  state.aircraftTypes = {
-    ...dbMap,
-    ...loadSavedAircraftTypes(),
-  };
+  state.aircraftTypeDb = dbMap;
+  state.localAircraftTypes = loadSavedAircraftTypes();
+  refreshEffectiveAircraftTypes();
   state.aircraftTypeDbLoaded = true;
   refreshOriginalRows();
   updateConfigStatus();
@@ -202,7 +221,7 @@ async function refreshSunTimes() {
 }
 
 function saveAircraftTypes() {
-  localStorage.setItem(CONFIG_STORAGE_KEY, serializeAircraftTypeMap(state.aircraftTypes));
+  localStorage.setItem(CONFIG_STORAGE_KEY, serializeAircraftTypeMap(state.localAircraftTypes));
 }
 
 function refreshOriginalRows() {
@@ -216,15 +235,54 @@ function configCount() {
   return Object.keys(state.aircraftTypes).length;
 }
 
+function localConfigDelta() {
+  return Object.entries(state.localAircraftTypes)
+    .filter(([registration, aircraftType]) => clean(registration) && clean(aircraftType))
+    .filter(([registration, aircraftType]) => state.aircraftTypeDb[registration] !== aircraftType)
+    .sort(([left], [right]) => clean(left).localeCompare(clean(right)));
+}
+
 function updateConfigStatus() {
   if (els.configStatus) {
     const source = state.aircraftTypeDbLoaded ? "GitHub DB + local" : "local";
-    els.configStatus.textContent = `현재 ${configCount()}개 등록 (${source})`;
+    const deltaCount = localConfigDelta().length;
+    els.configStatus.textContent = `현재 ${configCount()}개 등록 (${source}) · DB 반영 필요 ${deltaCount}개`;
   }
+  if (els.requestDbUpdateButton) {
+    const hasDelta = localConfigDelta().length > 0;
+    els.requestDbUpdateButton.disabled = !hasDelta;
+    els.requestDbUpdateButton.title = hasDelta ? "local override를 GitHub DB 업데이트 이슈로 요청" : "GitHub DB와 다른 local override가 없습니다";
+  }
+}
+
+function renderConfigPreview() {
+  if (!els.configPreview) return;
+  const rows = Object.entries(state.aircraftTypes)
+    .filter(([registration, aircraftType]) => clean(registration) && clean(aircraftType))
+    .sort(([left], [right]) => clean(left).localeCompare(clean(right)));
+
+  if (!rows.length) {
+    els.configPreview.innerHTML = '<div class="config-preview-empty">등록된 config가 없습니다.</div>';
+    return;
+  }
+
+  els.configPreview.innerHTML = rows
+    .map(([registration, aircraftType]) => {
+      const localType = state.localAircraftTypes[registration];
+      const dbType = state.aircraftTypeDb[registration];
+      const isLocal = Boolean(localType);
+      const isDelta = isLocal && dbType !== localType;
+      const source = isLocal ? (isDelta ? "local 변경" : "local 동일") : "GitHub DB";
+      const dbNote = isDelta && dbType ? ` · DB ${dbType}` : "";
+      const className = `config-preview-row${isLocal ? " is-local" : ""}${isDelta ? " is-delta" : ""}`;
+      return `<div class="${className}"><span>${escapeHtml(registration)}</span><strong>${escapeHtml(aircraftType)}</strong><em>${escapeHtml(source + dbNote)}</em></div>`;
+    })
+    .join("");
 }
 
 function openConfigDialog() {
   els.configText.value = serializeAircraftTypeMap(state.aircraftTypes);
+  renderConfigPreview();
   updateConfigStatus();
   if (typeof els.configDialog.showModal === "function") {
     els.configDialog.showModal();
@@ -242,13 +300,42 @@ function closeConfigDialog() {
 }
 
 function handleConfigSave() {
-  state.aircraftTypes = parseAircraftConfigText(els.configText.value);
+  state.localAircraftTypes = localOverridesFromEffectiveMap(parseAircraftConfigText(els.configText.value));
+  refreshEffectiveAircraftTypes();
   saveAircraftTypes();
   refreshOriginalRows();
   updateConfigStatus();
+  renderConfigPreview();
   setLoaded(`config ${configCount()}개 적용됨`);
   renderOutput();
   closeConfigDialog();
+}
+
+function buildDbUpdateIssueUrl() {
+  const delta = localConfigDelta();
+  const body = [
+    "### Change type",
+    "",
+    "Add or update registrations",
+    "",
+    "### Aircraft type map",
+    "",
+    "```tsv",
+    delta.map(([registration, aircraftType]) => `${registration}\t${aircraftType}`).join("\n"),
+    "```",
+  ].join("\n");
+  const params = new URLSearchParams({
+    title: "[aircraft-type-map] local override sync",
+    labels: "aircraft-type-map",
+    body,
+  });
+  return `${AIRCRAFT_TYPE_ISSUE_URL}?${params.toString()}`;
+}
+
+function handleDbUpdateRequest() {
+  const delta = localConfigDelta();
+  if (!delta.length) return;
+  window.open(buildDbUpdateIssueUrl(), "_blank", "noopener");
 }
 
 function escapeHtml(value) {
@@ -266,9 +353,7 @@ function escapeAttr(value) {
 function tooltipAttr(value, tooltip) {
   const text = clean(tooltip);
   if (!text) return "";
-  const displayValue = clean(value) || "blank";
-  const title = `값: ${displayValue}\n${text}`;
-  return ` title="${escapeAttr(title)}" aria-label="${escapeAttr(title)}"`;
+  return ` title="${escapeAttr(text)}" aria-label="${escapeAttr(text)}"`;
 }
 
 function cell(value, className = "", tooltip = "") {
@@ -474,10 +559,12 @@ async function handleWorkbook(file) {
   const originalSheet = workbook.Sheets.original || workbook.Sheets.Original || workbook.Sheets[workbook.SheetNames[0]];
   const configSheet = workbook.Sheets.config || workbook.Sheets.Config;
   if (configSheet) {
-    state.aircraftTypes = {
+    const workbookConfig = {
       ...state.aircraftTypes,
       ...parseAircraftTypeMap(rowsFromSheet(configSheet)),
     };
+    state.localAircraftTypes = localOverridesFromEffectiveMap(workbookConfig);
+    refreshEffectiveAircraftTypes();
     saveAircraftTypes();
   }
 
@@ -525,6 +612,7 @@ els.workbookInput.addEventListener("change", (event) => {
 els.parsePasteButton.addEventListener("click", handlePaste);
 els.configButton.addEventListener("click", openConfigDialog);
 els.saveConfigButton.addEventListener("click", handleConfigSave);
+els.requestDbUpdateButton.addEventListener("click", handleDbUpdateRequest);
 els.closeConfigButton.addEventListener("click", closeConfigDialog);
 els.configDialog.addEventListener("click", (event) => {
   if (event.target === els.configDialog) closeConfigDialog();

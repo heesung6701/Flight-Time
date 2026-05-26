@@ -215,14 +215,69 @@ button.secondary-action:hover {
 }
 
 .config-text {
-  min-height: 280px;
+  min-height: 180px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.config-preview {
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid #dbe7e5;
+  border-radius: 8px;
+  background: #f8fbfb;
+}
+
+.config-preview-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) minmax(64px, 0.7fr) minmax(110px, 1.3fr);
+  gap: 10px;
+  align-items: center;
+  padding: 7px 10px;
+  border-bottom: 1px solid #e5eeee;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+}
+
+.config-preview-row:last-child {
+  border-bottom: 0;
+}
+
+.config-preview-row.is-local {
+  color: #8a4b00;
+  background: #fff8ec;
+}
+
+.config-preview-row.is-delta {
+  color: #9f1239;
+  background: #fff1f2;
+}
+
+.config-preview-row strong {
+  font-weight: 900;
+}
+
+.config-preview-row em,
+.config-preview-empty {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.config-preview-empty {
+  padding: 12px;
+  font-size: 13px;
 }
 
 .config-footer span {
   color: var(--muted);
   font-size: 13px;
   font-weight: 800;
+}
+
+.config-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .workspace {

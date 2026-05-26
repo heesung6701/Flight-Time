@@ -56,7 +56,16 @@ test("provides a config button and editable aircraft mapping popup", () => {
   assert.match(indexHtml, /id="configButton"/);
   assert.match(indexHtml, /id="configDialog"/);
   assert.match(indexHtml, /id="configText"/);
+  assert.match(indexHtml, /id="configPreview"/);
+  assert.match(indexHtml, /id="requestDbUpdateButton"/);
   assert.match(indexHtml, /항공기번호/);
+});
+
+test("builds a GitHub issue request for local aircraft config deltas", () => {
+  assert.match(appJs, /AIRCRAFT_TYPE_ISSUE_URL/);
+  assert.match(appJs, /localConfigDelta/);
+  assert.match(appJs, /Add or update registrations/);
+  assert.match(appJs, /window\.open\(buildDbUpdateIssueUrl\(\)/);
 });
 
 test("parses original rows and removes summary rows", () => {
@@ -376,7 +385,7 @@ test("wires landing counts through zero-blank display", () => {
 
 test("adds calculation tooltips to output cells", () => {
   assert.match(appJs, /function tooltipAttr/);
-  assert.match(appJs, /값:/);
+  assert.doesNotMatch(appJs, /값: \$\{displayValue\}/);
   assert.match(appJs, /rowTooltips\(row\)/);
   assert.match(appJs, /totalTooltip\(label, summary, rows, "blockTime"/);
 });

@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
   <body>
-    <div class="version-badge" aria-label="version">v0.1.32</div>
+    <div class="version-badge" aria-label="version">v0.1.34</div>
     <main class="app-shell">
       <section class="topbar">
         <div>
@@ -182,13 +182,17 @@
           아래 입력값은 브라우저 local override로 우선 적용됩니다. 예: <code>HL8329 B73M</code>
         </p>
         <textarea id="configText" class="config-text" spellcheck="false" placeholder="HL8329	B73M&#10;HL8248	B738"></textarea>
+        <div id="configPreview" class="config-preview" aria-label="현재 적용 중인 항공기번호 기종 목록"></div>
         <div class="config-footer">
           <span id="configStatus">현재 0개 등록</span>
-          <button id="saveConfigButton" type="button">저장 후 다시 계산</button>
+          <div class="config-actions">
+            <button id="saveConfigButton" type="button">저장 후 다시 계산</button>
+            <button id="requestDbUpdateButton" class="secondary" type="button" disabled>DB 업데이트 요청</button>
+          </div>
         </div>
       </form>
     </dialog>
 
-    <script type="module" src="./app.js?v=0.1.32"></script>
+    <script type="module" src="./app.js?v=0.1.34"></script>
   </body>
 </html>
