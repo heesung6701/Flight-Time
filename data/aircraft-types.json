@@ -1,6 +1,283 @@
 {
   "schemaVersion": 1,
   "description": "Aircraft registration to aircraft type database. Add registrations under aircraft.",
-  "updatedAt": "2026-05-26T08:32:40.953Z",
-  "aircraft": {}
+  "updatedAt": "2026-05-26T08:33:27.170Z",
+  "aircraft": {
+    "HL8000": {
+      "registration": "HL8000",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8030": {
+      "registration": "HL8030",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8047": {
+      "registration": "HL8047",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8056": {
+      "registration": "HL8056",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8067": {
+      "registration": "HL8067",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8069": {
+      "registration": "HL8069",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8070": {
+      "registration": "HL8070",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8086": {
+      "registration": "HL8086",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8095": {
+      "registration": "HL8095",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8098": {
+      "registration": "HL8098",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8211": {
+      "registration": "HL8211",
+      "aircraftType": "A332",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8212": {
+      "registration": "HL8212",
+      "aircraftType": "A332",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8220": {
+      "registration": "HL8220",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8227": {
+      "registration": "HL8227",
+      "aircraftType": "A332",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8228": {
+      "registration": "HL8228",
+      "aircraftType": "A332",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8235": {
+      "registration": "HL8235",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8276": {
+      "registration": "HL8276",
+      "aircraftType": "A332",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8294": {
+      "registration": "HL8294",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8300": {
+      "registration": "HL8300",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8306": {
+      "registration": "HL8306",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8323": {
+      "registration": "HL8323",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8324": {
+      "registration": "HL8324",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8326": {
+      "registration": "HL8326",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8327": {
+      "registration": "HL8327",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8329": {
+      "registration": "HL8329",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8354": {
+      "registration": "HL8354",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8363": {
+      "registration": "HL8363",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8378": {
+      "registration": "HL8378",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8379": {
+      "registration": "HL8379",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8500": {
+      "registration": "HL8500",
+      "aircraftType": "A333",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8501": {
+      "registration": "HL8501",
+      "aircraftType": "A333",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8502": {
+      "registration": "HL8502",
+      "aircraftType": "A333",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8513": {
+      "registration": "HL8513",
+      "aircraftType": "B73M",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8514": {
+      "registration": "HL8514",
+      "aircraftType": "B73M",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8547": {
+      "registration": "HL8547",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8560": {
+      "registration": "HL8560",
+      "aircraftType": "A333",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8561": {
+      "registration": "HL8561",
+      "aircraftType": "A333",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8564": {
+      "registration": "HL8564",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8565": {
+      "registration": "HL8565",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8579": {
+      "registration": "HL8579",
+      "aircraftType": "B73M",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8580": {
+      "registration": "HL8580",
+      "aircraftType": "B73M",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8581": {
+      "registration": "HL8581",
+      "aircraftType": "B73M",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8708": {
+      "registration": "HL8708",
+      "aircraftType": "A332",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8737": {
+      "registration": "HL8737",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8738": {
+      "registration": "HL8738",
+      "aircraftType": "B738",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "HL8751": {
+      "registration": "HL8751",
+      "aircraftType": "B73M",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T08:33:27.170Z"
+    }
+  }
 }
