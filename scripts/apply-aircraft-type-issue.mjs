@@ -5,8 +5,6 @@ import path from "node:path";
 const root = process.cwd();
 const dbPath = path.join(root, "data", "aircraft-types.json");
 const packagePath = path.join(root, "package.json");
-const indexPath = path.join(root, "index.html");
-const appPath = path.join(root, "app.js");
 const summaryPath = process.env.AIRCRAFT_TYPE_ISSUE_SUMMARY || path.join(root, "aircraft-type-issue-summary.json");
 
 function normalizeRegistration(value) {
@@ -101,21 +99,8 @@ function bumpPatch(version) {
 
 async function bumpAppVersion() {
   const packageJson = await readJson(packagePath, {});
-  const oldVersion = packageJson.version;
-  const newVersion = bumpPatch(oldVersion);
-  packageJson.version = newVersion;
+  packageJson.version = bumpPatch(packageJson.version);
   await fs.writeFile(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
-
-  const indexHtml = await fs.readFile(indexPath, "utf8");
-  await fs.writeFile(
-    indexPath,
-    indexHtml
-      .replace(new RegExp(`v${oldVersion}`, "g"), `v${newVersion}`)
-      .replace(new RegExp(`app\\.js\\?v=${oldVersion}`, "g"), `app.js?v=${newVersion}`),
-  );
-
-  const appJs = await fs.readFile(appPath, "utf8");
-  await fs.writeFile(appPath, appJs.replace(new RegExp(`flighttime-core\\.js\\?v=${oldVersion}`, "g"), `flighttime-core.js?v=${newVersion}`));
 }
 
 async function main() {

@@ -27,7 +27,9 @@ import {
 
 const fixture = fs.readFileSync(new URL("./fixtures/original-sample.tsv", import.meta.url), "utf8");
 const indexHtml = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
-const appJs = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
+const appJs = fs.readFileSync(new URL("../src/legacy-app.js", import.meta.url), "utf8");
+const appMarkup = fs.readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const mainJs = fs.readFileSync(new URL("../src/main.jsx", import.meta.url), "utf8");
 const stylesCss = fs.readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const packageJson = JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 
@@ -40,14 +42,18 @@ test("requires every repository commit to bump the visible app version", () => {
 });
 
 test("shows the package version in a screen corner", () => {
-  assert.match(indexHtml, /class="version-badge"/);
-  assert.match(indexHtml, new RegExp(`v${packageJson.version}`));
+  assert.match(appMarkup, /className="version-badge"/);
+  assert.match(appMarkup, /v\{packageJson\.version\}/);
+  assert.match(appMarkup, /import packageJson from "\.\.\/package\.json"/);
 });
 
-test("cache-busts browser modules with the package version", () => {
-  assert.match(indexHtml, new RegExp(`src="\\./app\\.js\\?v=${packageJson.version}"`));
-  assert.match(appJs, new RegExp(`from "\\./src/core/airlines\\.js\\?v=${packageJson.version}"`));
-  assert.match(appJs, new RegExp(`from "\\./src/core/flighttime-core\\.js\\?v=${packageJson.version}"`));
+test("uses Vite as the React browser entry point", () => {
+  assert.match(indexHtml, /id="root"/);
+  assert.match(indexHtml, /src="\/src\/main\.jsx"/);
+  assert.match(mainJs, /createRoot/);
+  assert.match(mainJs, /import\("\.\/legacy-app\.js"\)/);
+  assert.match(appJs, /from "\.\/core\/airlines\.js"/);
+  assert.match(appJs, /from "\.\/core\/flighttime-core\.js"/);
 });
 
 test("parses Korean duration strings emitted by formatted Excel cells", () => {
@@ -57,8 +63,8 @@ test("parses Korean duration strings emitted by formatted Excel cells", () => {
 });
 
 test("lets the version badge force a fresh page request", () => {
-  assert.match(indexHtml, /class="version-badge"[^>]*role="button"/);
-  assert.match(indexHtml, /class="version-badge"[^>]*tabindex="0"/);
+  assert.match(appMarkup, /className="version-badge"[^>]*role="button"/);
+  assert.match(appMarkup, /className="version-badge"[^>]*tabIndex="0"/);
   assert.match(appJs, /function reloadLatestVersion\(\)/);
   assert.match(appJs, /searchParams\.set\("refresh", String\(Date\.now\(\)\)\)/);
   assert.match(appJs, /versionBadge\?\.addEventListener\("click", reloadLatestVersion\)/);
@@ -66,20 +72,20 @@ test("lets the version badge force a fresh page request", () => {
 });
 
 test("starts from airline selection and keeps topbar airline switching available", () => {
-  assert.match(indexHtml, /id="airlineGate"/);
-  assert.match(indexHtml, /id="airlineCards"/);
-  assert.match(indexHtml, /id="appWorkspace" hidden/);
-  assert.match(indexHtml, /id="topbarAirlineSelect"/);
+  assert.match(appMarkup, /id="airlineGate"/);
+  assert.match(appMarkup, /id="airlineCards"/);
+  assert.match(appMarkup, /id="appWorkspace" hidden/);
+  assert.match(appMarkup, /id="topbarAirlineSelect"/);
   assert.match(appJs, /flightTimeSelectedAirline/);
   assert.match(appJs, /chooseAirline/);
 });
 
 test("separates file upload from direct input in a dialog", () => {
-  assert.match(indexHtml, /id="workbookInput"/);
-  assert.match(indexHtml, /id="manualInputButton"/);
-  assert.match(indexHtml, /id="manualInputDialog"/);
-  assert.match(indexHtml, /id="pasteArea"/);
-  assert.match(indexHtml, /CSV 입력/);
+  assert.match(appMarkup, /id="workbookInput"/);
+  assert.match(appMarkup, /id="manualInputButton"/);
+  assert.match(appMarkup, /id="manualInputDialog"/);
+  assert.match(appMarkup, /id="pasteArea"/);
+  assert.match(appMarkup, /CSV 입력/);
   assert.match(appJs, /openManualInputDialog/);
   assert.match(appJs, /closeManualInputDialog/);
 });
@@ -99,18 +105,18 @@ test("requests and caches sunrise/sunset times in UTC", () => {
 });
 
 test("provides a config button and editable aircraft mapping popup", () => {
-  assert.match(indexHtml, /id="configButton"/);
-  assert.match(indexHtml, /id="configDialog"/);
-  assert.match(indexHtml, /id="configText"/);
-  assert.match(indexHtml, /id="configDeltaPreview"/);
-  assert.match(indexHtml, /id="requestDbUpdateButton"/);
-  assert.match(indexHtml, /class="config-delta-row"/);
-  assert.match(indexHtml, /https:\/\/github\.com\/heesung6701\/Flight-Time\/blob\/main\/data\/aircraft-types\.json/);
-  assert.match(indexHtml, /항공기번호/);
+  assert.match(appMarkup, /id="configButton"/);
+  assert.match(appMarkup, /id="configDialog"/);
+  assert.match(appMarkup, /id="configText"/);
+  assert.match(appMarkup, /id="configDeltaPreview"/);
+  assert.match(appMarkup, /id="requestDbUpdateButton"/);
+  assert.match(appMarkup, /className="config-delta-row"/);
+  assert.match(appMarkup, /https:\/\/github\.com\/heesung6701\/Flight-Time\/blob\/main\/data\/aircraft-types\.json/);
+  assert.match(appMarkup, /항공기번호/);
 });
 
 test("uses the default textarea rendering for the config editor", () => {
-  assert.doesNotMatch(indexHtml, /id="configHighlight"/);
+  assert.doesNotMatch(appMarkup, /id="configHighlight"/);
   assert.doesNotMatch(appJs, /configHighlight/);
   assert.doesNotMatch(appJs, /renderConfigHighlight/);
   assert.doesNotMatch(stylesCss, /\.config-highlight/);
@@ -196,12 +202,15 @@ test("parses GitHub aircraft type database JSON into registration mappings", () 
 
 test("build script publishes the aircraft type database with Pages assets", () => {
   const buildScript = fs.readFileSync(new URL("../scripts/build-pages.mjs", import.meta.url), "utf8");
-  assert.match(buildScript, /data\/aircraft-types\.json/);
+  const viteConfig = fs.readFileSync(new URL("../vite.config.js", import.meta.url), "utf8");
+  assert.match(buildScript, /vite/);
+  assert.match(viteConfig, /data\/aircraft-types\.json/);
+  assert.match(viteConfig, /\.nojekyll/);
 });
 
 test("does not expose a client-side aircraft lookup API key", () => {
   assert.doesNotMatch(appJs, /RapidAPI|AERODATABOX|X-RapidAPI-Key/);
-  assert.doesNotMatch(indexHtml, /AeroDataBox|RapidAPI/);
+  assert.doesNotMatch(appMarkup, /AeroDataBox|RapidAPI/);
 });
 
 test("defines an aircraft type map issue automation", () => {

@@ -2,7 +2,7 @@ import {
   DEFAULT_AIRLINE_ID,
   airlineOptions,
   getAirline,
-} from "./src/core/airlines.js?v=0.1.56";
+} from "./core/airlines.js";
 import {
   DEFAULT_PAGE_SIZE,
   buildOutputPage,
@@ -22,7 +22,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.56";
+} from "./core/flighttime-core.js";
 
 const AIRLINE_STORAGE_KEY = "flightTimeSelectedAirline";
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
@@ -528,7 +528,10 @@ function renderOutput() {
 
   els.outputBody.innerHTML = "";
   if (!page.rows.length) {
-    els.outputBody.appendChild(els.emptyRowTemplate.content.cloneNode(true));
+    const tr = document.createElement("tr");
+    tr.className = "empty-row";
+    tr.innerHTML = '<td colspan="24">original 데이터를 불러오면 output이 여기에 표시됩니다.</td>';
+    els.outputBody.appendChild(tr);
   } else {
     page.rows.forEach((row) => {
       const tooltips = rowTooltips(row);
