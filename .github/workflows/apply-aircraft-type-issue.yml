@@ -88,22 +88,50 @@ jobs:
           git commit -m "chore: update aircraft type map from issue #${{ github.event.issue.number }}"
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Comment on issue
-        if: always() && steps.detect.outputs.matches == 'true'
+      - name: Resolve issue
+        if: steps.detect.outputs.matches == 'true' && steps.commit.outputs.changed == 'true'
         uses: actions/github-script@v7
         with:
           script: |
-            const changed = '${{ steps.commit.outputs.changed }}' === 'true';
-            const status = '${{ job.status }}';
-            const body = status === 'success'
-              ? (changed
-                ? 'Aircraft type map was applied and committed.'
-                : 'Aircraft type map was already up to date.')
-              : 'Aircraft type map automation failed. Check the workflow logs for details.';
+            const sha = '${{ steps.commit.outputs.sha }}';
+            const shortSha = sha.slice(0, 7);
+            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body,
+              body: `Aircraft type map was applied in commit ${shortSha}: ${commitUrl}\n\nResolving this issue.`,
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed',
+              state_reason: 'completed',
+            });
+
+      - name: Comment on unchanged issue
+        if: steps.detect.outputs.matches == 'true' && steps.commit.outputs.changed == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Aircraft type map was already up to date. No commit was created.',
+            });
+
+      - name: Comment on failed issue
+        if: failure() && steps.detect.outputs.matches == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Aircraft type map automation failed. Check the workflow logs for details.',
             });
