@@ -2,7 +2,7 @@ import {
   DEFAULT_AIRLINE_ID,
   airlineOptions,
   getAirline,
-} from "./src/core/airlines.js?v=0.1.42";
+} from "./src/core/airlines.js?v=0.1.45";
 import {
   DEFAULT_PAGE_SIZE,
   buildOutputPage,
@@ -22,7 +22,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.42";
+} from "./src/core/flighttime-core.js?v=0.1.45";
 
 const AIRLINE_STORAGE_KEY = "flightTimeSelectedAirline";
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";

@@ -27,6 +27,7 @@ import {
 const fixture = fs.readFileSync(new URL("./fixtures/original-sample.tsv", import.meta.url), "utf8");
 const indexHtml = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const appJs = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
+const stylesCss = fs.readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const packageJson = JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 
 const agentRules = fs.readFileSync(new URL("../AGENTS.md", import.meta.url), "utf8");
@@ -89,6 +90,16 @@ test("provides a config button and editable aircraft mapping popup", () => {
   assert.match(indexHtml, /id="configDeltaPreview"/);
   assert.match(indexHtml, /id="requestDbUpdateButton"/);
   assert.match(indexHtml, /항공기번호/);
+});
+
+test("keeps the config editor caret visible over the highlight layer", () => {
+  assert.match(stylesCss, /\.config-text\s*{/);
+  assert.match(stylesCss, /caret-color:\s*var\(--ink\)/);
+  assert.doesNotMatch(stylesCss, /caret-color:\s*var\(--text\)/);
+});
+
+test("fills the direct input dialog apply button width", () => {
+  assert.match(stylesCss, /\.manual-input-actions button\s*{[^}]*width:\s*100%/s);
 });
 
 test("builds a GitHub issue request for local aircraft config deltas", () => {

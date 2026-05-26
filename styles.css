@@ -366,7 +366,7 @@ button.secondary-action:hover {
   inset: 0;
   resize: none;
   color: transparent;
-  caret-color: var(--text);
+  caret-color: var(--ink);
   background: transparent;
   z-index: 1;
 }
@@ -477,13 +477,17 @@ button.secondary-action:hover {
 }
 
 .input-mode-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
   gap: 8px;
 }
 
+.input-mode-actions .file-button,
 .input-mode-actions .file-button span,
 .input-mode-actions button {
+  flex: 1 1 0;
+  min-width: 0;
   width: 100%;
 }
 
@@ -521,6 +525,14 @@ select:focus {
   border-color: var(--accent);
 }
 
+.config-editor .config-text {
+  min-height: 280px;
+  resize: none;
+  color: transparent;
+  caret-color: var(--ink);
+  background: transparent;
+}
+
 .input-actions {
   margin-top: 10px;
 }
@@ -528,6 +540,10 @@ select:focus {
 .manual-input-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.manual-input-actions button {
+  width: 100%;
 }
 
 .stats-grid {
