@@ -130,7 +130,9 @@ test("defines an aircraft type map issue automation", () => {
   assert.match(issueTemplate, /Aircraft type map/);
   assert.match(workflow, /issues:/);
   assert.match(workflow, /aircraft-type-map/);
-  assert.match(workflow, /startsWith\(github\.event\.issue\.title, '\[aircraft-type-map\]'\)/);
+  assert.match(workflow, /Detect and label aircraft type issue/);
+  assert.match(workflow, /createLabel/);
+  assert.match(workflow, /addLabels/);
   assert.match(workflow, /data\/aircraft-types\.json package\.json index\.html app\.js/);
   assert.match(script, /GITHUB_EVENT_PATH/);
   assert.match(script, /bumpAppVersion/);

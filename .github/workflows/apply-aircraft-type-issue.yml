@@ -17,23 +17,65 @@ concurrency:
 
 jobs:
   apply:
-    if: contains(github.event.issue.labels.*.name, 'aircraft-type-map') || startsWith(github.event.issue.title, '[aircraft-type-map]') || contains(github.event.issue.body, '### Aircraft type map')
     runs-on: ubuntu-latest
     steps:
+      - name: Detect and label aircraft type issue
+        id: detect
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labelName = 'aircraft-type-map';
+            const issue = context.payload.issue;
+            const labels = issue.labels.map((label) => label.name);
+            const matches = labels.includes(labelName)
+              || issue.title.startsWith('[aircraft-type-map]')
+              || issue.body.includes('### Aircraft type map');
+
+            core.setOutput('matches', matches ? 'true' : 'false');
+            if (!matches || labels.includes(labelName)) return;
+
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: labelName,
+              });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: labelName,
+                color: '0E8A16',
+                description: 'Updates data/aircraft-types.json from an issue form',
+              });
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              labels: [labelName],
+            });
+
       - name: Checkout
+        if: steps.detect.outputs.matches == 'true'
         uses: actions/checkout@v4
         with:
           persist-credentials: true
 
       - name: Setup Node
+        if: steps.detect.outputs.matches == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
       - name: Apply aircraft type issue
+        if: steps.detect.outputs.matches == 'true'
         run: node scripts/apply-aircraft-type-issue.mjs
 
       - name: Commit changes
+        if: steps.detect.outputs.matches == 'true'
         id: commit
         run: |
           if git diff --quiet -- data/aircraft-types.json package.json index.html app.js; then
@@ -48,7 +90,7 @@ jobs:
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Comment on issue
-        if: always()
+        if: always() && steps.detect.outputs.matches == 'true'
         uses: actions/github-script@v7
         with:
           script: |
