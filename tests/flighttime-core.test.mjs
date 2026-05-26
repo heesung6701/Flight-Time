@@ -98,12 +98,17 @@ test("provides a config button and editable aircraft mapping popup", () => {
   assert.match(indexHtml, /id="configHighlight"/);
   assert.match(indexHtml, /id="configDeltaPreview"/);
   assert.match(indexHtml, /id="requestDbUpdateButton"/);
+  assert.match(indexHtml, /class="config-delta-row"/);
+  assert.match(indexHtml, /https:\/\/github\.com\/heesung6701\/Flight-Time\/blob\/main\/data\/aircraft-types\.json/);
   assert.match(indexHtml, /항공기번호/);
 });
 
 test("keeps the config editor caret visible over the highlight layer", () => {
   assert.match(stylesCss, /\.config-text\s*{/);
   assert.match(stylesCss, /caret-color:\s*var\(--ink\)/);
+  assert.match(stylesCss, /\.config-highlight\s*{[^}]*color:\s*transparent/s);
+  assert.match(stylesCss, /\.config-text\s*{[^}]*color:\s*var\(--ink\)/s);
+  assert.match(stylesCss, /\.config-editor \.config-text\s*{[^}]*color:\s*var\(--ink\)/s);
   assert.doesNotMatch(stylesCss, /caret-color:\s*var\(--text\)/);
 });
 
@@ -111,14 +116,23 @@ test("fills the direct input dialog apply button width", () => {
   assert.match(stylesCss, /\.manual-input-actions button\s*{[^}]*width:\s*100%/s);
 });
 
+test("stacks input mode buttons at full width", () => {
+  assert.match(stylesCss, /\.input-mode-actions\s*{[^}]*grid-template-columns:\s*1fr/s);
+  assert.match(stylesCss, /\.input-mode-actions \.file-button\s*{[^}]*width:\s*100%/s);
+  assert.match(stylesCss, /\.input-mode-actions button\s*{[^}]*width:\s*100%/s);
+});
+
 test("builds a GitHub issue request for local aircraft config deltas", () => {
   assert.match(appJs, /AIRCRAFT_TYPE_ISSUE_URL/);
   assert.match(appJs, /localConfigDelta/);
   assert.match(appJs, /configDraftDelta/);
+  assert.match(appJs, /currentConfigDelta/);
+  assert.match(appJs, /const deltaCount = currentConfigDelta\(\)\.length/);
   assert.match(appJs, /renderConfigHighlight/);
   assert.match(appJs, /renderConfigDeltaPreview/);
   assert.match(appJs, /Add or update registrations/);
-  assert.match(appJs, /window\.open\(buildDbUpdateIssueUrl\(\)/);
+  assert.match(appJs, /window\.open\(buildDbUpdateIssueUrl\(delta\)/);
+  assert.match(stylesCss, /\.config-delta-row\s*{[^}]*display:\s*flex/s);
 });
 
 test("parses original rows and removes summary rows", () => {

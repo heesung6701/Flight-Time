@@ -2,7 +2,7 @@ import {
   DEFAULT_AIRLINE_ID,
   airlineOptions,
   getAirline,
-} from "./src/core/airlines.js?v=0.1.48";
+} from "./src/core/airlines.js?v=0.1.50";
 import {
   DEFAULT_PAGE_SIZE,
   buildOutputPage,
@@ -22,7 +22,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.48";
+} from "./src/core/flighttime-core.js?v=0.1.50";
 
 const AIRLINE_STORAGE_KEY = "flightTimeSelectedAirline";
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
@@ -291,14 +291,18 @@ function configDraftDelta() {
     .sort(([left], [right]) => clean(left).localeCompare(clean(right)));
 }
 
+function currentConfigDelta() {
+  return els.configDialog?.open ? configDraftDelta() : localConfigDelta();
+}
+
 function updateConfigStatus() {
+  const deltaCount = currentConfigDelta().length;
   if (els.configStatus) {
     const source = state.aircraftTypeDbLoaded ? "GitHub DB + local" : "local";
-    const deltaCount = localConfigDelta().length;
     els.configStatus.textContent = `현재 ${configCount()}개 등록 (${source}) · DB 반영 필요 ${deltaCount}개`;
   }
   if (els.requestDbUpdateButton) {
-    const hasDelta = localConfigDelta().length > 0;
+    const hasDelta = deltaCount > 0;
     els.requestDbUpdateButton.disabled = !hasDelta;
     els.requestDbUpdateButton.title = hasDelta ? "local override를 GitHub DB 업데이트 이슈로 요청" : "GitHub DB와 다른 local override가 없습니다";
   }
@@ -322,6 +326,7 @@ function renderConfigHighlight() {
     })
     .join("\n");
   renderConfigDeltaPreview();
+  updateConfigStatus();
 }
 
 function renderConfigDeltaPreview() {
@@ -345,12 +350,12 @@ function renderConfigDeltaPreview() {
 function openConfigDialog() {
   els.configText.value = serializeAircraftTypeMap(state.localAircraftTypes);
   renderConfigHighlight();
-  updateConfigStatus();
   if (typeof els.configDialog.showModal === "function") {
     els.configDialog.showModal();
   } else {
     els.configDialog.setAttribute("open", "");
   }
+  updateConfigStatus();
 }
 
 function closeConfigDialog() {
@@ -376,8 +381,7 @@ function handleConfigSave() {
   closeConfigDialog();
 }
 
-function buildDbUpdateIssueUrl() {
-  const delta = localConfigDelta();
+function buildDbUpdateIssueUrl(delta = currentConfigDelta()) {
   const body = [
     "### Change type",
     "",
@@ -398,9 +402,9 @@ function buildDbUpdateIssueUrl() {
 }
 
 function handleDbUpdateRequest() {
-  const delta = localConfigDelta();
+  const delta = currentConfigDelta();
   if (!delta.length) return;
-  window.open(buildDbUpdateIssueUrl(), "_blank", "noopener");
+  window.open(buildDbUpdateIssueUrl(delta), "_blank", "noopener");
 }
 
 function escapeHtml(value) {

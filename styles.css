@@ -346,7 +346,7 @@ button.secondary-action:hover {
   inset: 0;
   border: 1px solid transparent;
   background: #f8fbfb;
-  color: var(--text);
+  color: transparent;
   pointer-events: none;
 }
 
@@ -374,7 +374,7 @@ button.secondary-action:hover {
   position: absolute;
   inset: 0;
   resize: none;
-  color: transparent;
+  color: var(--ink);
   caret-color: var(--ink);
   background: transparent;
   z-index: 1;
@@ -386,15 +386,22 @@ button.secondary-action:hover {
 
 .config-text::selection {
   background: rgba(47, 123, 118, 0.22);
-  color: transparent;
+  color: var(--ink);
+}
+
+.config-delta-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: -4px;
 }
 
 .config-delta-preview {
   display: flex;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   gap: 6px;
   min-height: 28px;
-  margin-top: -4px;
   color: var(--muted);
   font-size: 12px;
 }
@@ -434,6 +441,7 @@ button.secondary-action:hover {
 }
 
 .text-link-button {
+  flex: 0 0 auto;
   padding: 0;
   border: 0;
   background: transparent;
@@ -486,17 +494,18 @@ button.secondary-action:hover {
 }
 
 .input-mode-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 8px;
 }
 
-.input-mode-actions .file-button,
+.input-mode-actions .file-button {
+  display: block;
+  width: 100%;
+}
+
 .input-mode-actions .file-button span,
 .input-mode-actions button {
-  flex: 1 1 0;
-  min-width: 0;
   width: 100%;
 }
 
@@ -537,7 +546,7 @@ select:focus {
 .config-editor .config-text {
   min-height: 280px;
   resize: none;
-  color: transparent;
+  color: var(--ink);
   caret-color: var(--ink);
   background: transparent;
 }
