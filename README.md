@@ -106,6 +106,23 @@ HL8580
 https://heesung6701.github.io/Flight-Time/
 ```
 
+## Vercel 배포
+
+Vercel 배포 주소:
+
+```text
+https://flight-logbook-five.vercel.app/
+```
+
+이 저장소는 Vercel에서 GitHub repository를 import해 자동 배포합니다. 별도 GitHub Actions Vercel workflow는 필요하지 않습니다. Vercel project 설정은 `vercel.json`에 고정되어 있습니다.
+
+```text
+Build Command: npm run build:pages
+Output Directory: dist
+```
+
+환경변수는 필요하지 않습니다.
+
 ## 참고
 
 - 이 앱은 정적 웹앱이며 브라우저에서 실행됩니다.
