@@ -95,7 +95,6 @@ test("provides a config button and editable aircraft mapping popup", () => {
   assert.match(indexHtml, /id="configButton"/);
   assert.match(indexHtml, /id="configDialog"/);
   assert.match(indexHtml, /id="configText"/);
-  assert.match(indexHtml, /id="configHighlight"/);
   assert.match(indexHtml, /id="configDeltaPreview"/);
   assert.match(indexHtml, /id="requestDbUpdateButton"/);
   assert.match(indexHtml, /class="config-delta-row"/);
@@ -104,7 +103,10 @@ test("provides a config button and editable aircraft mapping popup", () => {
 });
 
 test("uses the default textarea rendering for the config editor", () => {
-  assert.match(stylesCss, /\.config-highlight\s*{[^}]*display:\s*none/s);
+  assert.doesNotMatch(indexHtml, /id="configHighlight"/);
+  assert.doesNotMatch(appJs, /configHighlight/);
+  assert.doesNotMatch(appJs, /renderConfigHighlight/);
+  assert.doesNotMatch(stylesCss, /\.config-highlight/);
   assert.doesNotMatch(stylesCss, /\.config-text\s*{/);
   assert.doesNotMatch(stylesCss, /\.config-editor \.config-text\s*{/);
   assert.doesNotMatch(stylesCss, /\.config-text::selection/);
@@ -127,7 +129,7 @@ test("builds a GitHub issue request for local aircraft config deltas", () => {
   assert.match(appJs, /configDraftDelta/);
   assert.match(appJs, /currentConfigDelta/);
   assert.match(appJs, /const deltaCount = currentConfigDelta\(\)\.length/);
-  assert.match(appJs, /renderConfigHighlight/);
+  assert.match(appJs, /renderConfigDraftState/);
   assert.match(appJs, /renderConfigDeltaPreview/);
   assert.match(appJs, /Add or update registrations/);
   assert.match(appJs, /window\.open\(buildDbUpdateIssueUrl\(delta\)/);

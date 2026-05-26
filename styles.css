@@ -324,30 +324,6 @@ button.secondary-action:hover {
   font-weight: 800;
 }
 
-.config-highlight {
-  display: none;
-}
-
-.config-highlight span {
-  display: block;
-  min-height: 18px;
-}
-
-.config-highlight .is-local {
-  color: #8a4b00;
-  background: #fff8ec;
-}
-
-.config-highlight .is-add {
-  color: #166534;
-  background: #ecfdf3;
-}
-
-.config-highlight .is-update {
-  color: #9f1239;
-  background: #fff1f2;
-}
-
 .config-delta-row {
   display: flex;
   align-items: flex-start;

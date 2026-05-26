@@ -2,7 +2,7 @@ import {
   DEFAULT_AIRLINE_ID,
   airlineOptions,
   getAirline,
-} from "./src/core/airlines.js?v=0.1.51";
+} from "./src/core/airlines.js?v=0.1.52";
 import {
   DEFAULT_PAGE_SIZE,
   buildOutputPage,
@@ -22,7 +22,7 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.51";
+} from "./src/core/flighttime-core.js?v=0.1.52";
 
 const AIRLINE_STORAGE_KEY = "flightTimeSelectedAirline";
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
@@ -65,7 +65,6 @@ const els = {
   configButton: document.querySelector("#configButton"),
   configDialog: document.querySelector("#configDialog"),
   configText: document.querySelector("#configText"),
-  configHighlight: document.querySelector("#configHighlight"),
   configDeltaPreview: document.querySelector("#configDeltaPreview"),
   configStatus: document.querySelector("#configStatus"),
   saveConfigButton: document.querySelector("#saveConfigButton"),
@@ -308,23 +307,7 @@ function updateConfigStatus() {
   }
 }
 
-function renderConfigHighlight() {
-  if (!els.configHighlight || !els.configText) return;
-  const lines = els.configText.value.split(/\r?\n/);
-  els.configHighlight.innerHTML = lines
-    .map((line) => {
-      const [registrationValue, typeValue = ""] = line.trim().split(/[\t, ]+/);
-      const registration = clean(registrationValue).toUpperCase();
-      const aircraftType = clean(typeValue).toUpperCase();
-      const isComplete = registration && aircraftType;
-      const dbType = state.aircraftTypeDb[registration];
-      const isAdd = isComplete && !dbType;
-      const isUpdate = isComplete && dbType && dbType !== aircraftType;
-      const className = isAdd ? "is-add" : isUpdate ? "is-update" : "";
-      const safeLine = escapeHtml(line || " ");
-      return `<span class="${className}">${safeLine}</span>`;
-    })
-    .join("\n");
+function renderConfigDraftState() {
   renderConfigDeltaPreview();
   updateConfigStatus();
 }
@@ -349,7 +332,7 @@ function renderConfigDeltaPreview() {
 
 function openConfigDialog() {
   els.configText.value = serializeAircraftTypeMap(state.localAircraftTypes);
-  renderConfigHighlight();
+  renderConfigDraftState();
   if (typeof els.configDialog.showModal === "function") {
     els.configDialog.showModal();
   } else {
@@ -375,7 +358,7 @@ function handleConfigSave() {
   saveAircraftTypes();
   refreshOriginalRows();
   updateConfigStatus();
-  renderConfigHighlight();
+  renderConfigDraftState();
   setLoaded(`local config ${localConfigDelta().length}개 적용됨`);
   renderOutput();
   closeConfigDialog();
@@ -762,11 +745,7 @@ els.parsePasteButton.addEventListener("click", handlePaste);
 els.configButton.addEventListener("click", openConfigDialog);
 els.saveConfigButton.addEventListener("click", handleConfigSave);
 els.requestDbUpdateButton.addEventListener("click", handleDbUpdateRequest);
-els.configText.addEventListener("input", renderConfigHighlight);
-els.configText.addEventListener("scroll", () => {
-  els.configHighlight.scrollTop = els.configText.scrollTop;
-  els.configHighlight.scrollLeft = els.configText.scrollLeft;
-});
+els.configText.addEventListener("input", renderConfigDraftState);
 els.closeConfigButton.addEventListener("click", closeConfigDialog);
 els.configDialog.addEventListener("click", (event) => {
   if (event.target === els.configDialog) closeConfigDialog();
