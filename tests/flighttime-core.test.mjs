@@ -136,9 +136,12 @@ test("defines an aircraft type map issue automation", () => {
   assert.match(workflow, /Resolve issue/);
   assert.match(workflow, /state_reason: 'completed'/);
   assert.match(workflow, /steps\.commit\.outputs\.sha/);
+  assert.match(workflow, /Final map/);
+  assert.match(workflow, /aircraft-type-issue-summary\.json/);
   assert.match(workflow, /data\/aircraft-types\.json package\.json index\.html app\.js/);
   assert.match(script, /GITHUB_EVENT_PATH/);
   assert.match(script, /bumpAppVersion/);
+  assert.match(script, /writeSummary/);
 });
 
 test("calculates B/T and F/O from duty using full F block time and rounded two thirds NF block time", () => {

@@ -72,6 +72,8 @@ jobs:
 
       - name: Apply aircraft type issue
         if: steps.detect.outputs.matches == 'true'
+        env:
+          AIRCRAFT_TYPE_ISSUE_SUMMARY: /tmp/aircraft-type-issue-summary.json
         run: node scripts/apply-aircraft-type-issue.mjs
 
       - name: Commit changes
@@ -95,14 +97,39 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
             const sha = '${{ steps.commit.outputs.sha }}';
             const shortSha = sha.slice(0, 7);
             const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
+            const summary = JSON.parse(fs.readFileSync('/tmp/aircraft-type-issue-summary.json', 'utf8'));
+            const list = (items, render) => items.length ? items.map(render).join('\n') : '- None';
+            const finalMap = Object.entries(summary.finalMap)
+              .map(([registration, aircraftType]) => `${registration}\t${aircraftType}`)
+              .join('\n');
+            const body = [
+              `Aircraft type map was applied in commit ${shortSha}: ${commitUrl}`,
+              '',
+              '### Added',
+              list(summary.changes.added, (item) => `- ${item.registration}: ${item.aircraftType}`),
+              '',
+              '### Updated',
+              list(summary.changes.updated, (item) => `- ${item.registration}: ${item.from || '(empty)'} -> ${item.to}`),
+              '',
+              '### Deleted',
+              list(summary.changes.deleted, (item) => `- ${item.registration}: ${item.aircraftType || '(empty)'}`),
+              '',
+              '### Final map',
+              '```tsv',
+              finalMap,
+              '```',
+              '',
+              'Resolving this issue.',
+            ].join('\n');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `Aircraft type map was applied in commit ${shortSha}: ${commitUrl}\n\nResolving this issue.`,
+              body,
             });
             await github.rest.issues.update({
               owner: context.repo.owner,
