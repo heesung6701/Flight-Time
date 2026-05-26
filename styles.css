@@ -324,30 +324,8 @@ button.secondary-action:hover {
   font-weight: 800;
 }
 
-.config-editor {
-  position: relative;
-  min-height: 280px;
-}
-
-.config-text,
 .config-highlight {
-  min-height: 280px;
-  margin: 0;
-  padding: 12px;
-  border-radius: 8px;
-  font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  letter-spacing: 0;
-  white-space: pre-wrap;
-  overflow: auto;
-}
-
-.config-highlight {
-  position: absolute;
-  inset: 0;
-  border: 1px solid transparent;
-  background: #f8fbfb;
-  color: transparent;
-  pointer-events: none;
+  display: none;
 }
 
 .config-highlight span {
@@ -368,25 +346,6 @@ button.secondary-action:hover {
 .config-highlight .is-update {
   color: #9f1239;
   background: #fff1f2;
-}
-
-.config-text {
-  position: absolute;
-  inset: 0;
-  resize: none;
-  color: var(--ink);
-  caret-color: var(--ink);
-  background: transparent;
-  z-index: 1;
-}
-
-.config-text::placeholder {
-  color: #8c9aa7;
-}
-
-.config-text::selection {
-  background: rgba(47, 123, 118, 0.22);
-  color: var(--ink);
 }
 
 .config-delta-row {
@@ -541,14 +500,6 @@ input:focus,
 select:focus {
   outline: 2px solid rgba(15, 118, 110, 0.2);
   border-color: var(--accent);
-}
-
-.config-editor .config-text {
-  min-height: 280px;
-  resize: none;
-  color: var(--ink);
-  caret-color: var(--ink);
-  background: transparent;
 }
 
 .input-actions {

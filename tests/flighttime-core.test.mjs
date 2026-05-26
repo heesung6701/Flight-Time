@@ -103,13 +103,12 @@ test("provides a config button and editable aircraft mapping popup", () => {
   assert.match(indexHtml, /항공기번호/);
 });
 
-test("keeps the config editor caret visible over the highlight layer", () => {
-  assert.match(stylesCss, /\.config-text\s*{/);
-  assert.match(stylesCss, /caret-color:\s*var\(--ink\)/);
-  assert.match(stylesCss, /\.config-highlight\s*{[^}]*color:\s*transparent/s);
-  assert.match(stylesCss, /\.config-text\s*{[^}]*color:\s*var\(--ink\)/s);
-  assert.match(stylesCss, /\.config-editor \.config-text\s*{[^}]*color:\s*var\(--ink\)/s);
-  assert.doesNotMatch(stylesCss, /caret-color:\s*var\(--text\)/);
+test("uses the default textarea rendering for the config editor", () => {
+  assert.match(stylesCss, /\.config-highlight\s*{[^}]*display:\s*none/s);
+  assert.doesNotMatch(stylesCss, /\.config-text\s*{/);
+  assert.doesNotMatch(stylesCss, /\.config-editor \.config-text\s*{/);
+  assert.doesNotMatch(stylesCss, /\.config-text::selection/);
+  assert.doesNotMatch(stylesCss, /caret-color:/);
 });
 
 test("fills the direct input dialog apply button width", () => {
