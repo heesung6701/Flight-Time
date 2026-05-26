@@ -90,6 +90,12 @@ test("separates file upload from direct input in a dialog", () => {
   assert.match(appJs, /closeManualInputDialog/);
 });
 
+test("loads workbook uploads from the first sheet only", () => {
+  assert.match(appJs, /workbook\.Sheets\[workbook\.SheetNames\[0\]\]/);
+  assert.doesNotMatch(appJs, /workbook\.Sheets\.original/);
+  assert.doesNotMatch(appJs, /workbook\.Sheets\.Original/);
+});
+
 test("defines T'way as the default airline output rule set", () => {
   const tway = getAirline(DEFAULT_AIRLINE_ID);
 
