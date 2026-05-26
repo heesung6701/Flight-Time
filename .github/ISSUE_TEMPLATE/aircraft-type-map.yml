@@ -1,0 +1,33 @@
+name: Aircraft type map update
+description: Add, update, or delete aircraft registration to type mappings.
+title: "[aircraft-type-map] "
+labels:
+  - aircraft-type-map
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to update `data/aircraft-types.json`.
+        The automation accepts tab, comma, or whitespace separated rows.
+  - type: dropdown
+    id: change_type
+    attributes:
+      label: Change type
+      description: Choose how the submitted rows should change the aircraft type map.
+      options:
+        - Add or update registrations
+        - Delete registrations
+    validations:
+      required: true
+  - type: textarea
+    id: aircraft_type_map
+    attributes:
+      label: Aircraft type map
+      description: For add/update, enter `registration type`. For delete, registration-only rows are enough.
+      placeholder: |
+        HL8513 B73M
+        HL8737 B738
+        HL8211 A332
+      render: tsv
+    validations:
+      required: true

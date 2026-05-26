@@ -120,6 +120,21 @@ test("does not expose a client-side aircraft lookup API key", () => {
   assert.doesNotMatch(indexHtml, /AeroDataBox|RapidAPI/);
 });
 
+test("defines an aircraft type map issue automation", () => {
+  const issueTemplate = fs.readFileSync(new URL("../.github/ISSUE_TEMPLATE/aircraft-type-map.yml", import.meta.url), "utf8");
+  const workflow = fs.readFileSync(new URL("../.github/workflows/apply-aircraft-type-issue.yml", import.meta.url), "utf8");
+  const script = fs.readFileSync(new URL("../scripts/apply-aircraft-type-issue.mjs", import.meta.url), "utf8");
+
+  assert.match(issueTemplate, /aircraft-type-map/);
+  assert.match(issueTemplate, /Change type/);
+  assert.match(issueTemplate, /Aircraft type map/);
+  assert.match(workflow, /issues:/);
+  assert.match(workflow, /aircraft-type-map/);
+  assert.match(workflow, /data\/aircraft-types\.json package\.json index\.html app\.js/);
+  assert.match(script, /GITHUB_EVENT_PATH/);
+  assert.match(script, /bumpAppVersion/);
+});
+
 test("calculates B/T and F/O from duty using full F block time and rounded two thirds NF block time", () => {
   const modified = modifyRows([
     {

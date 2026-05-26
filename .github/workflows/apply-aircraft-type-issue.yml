@@ -1,0 +1,67 @@
+name: Apply aircraft type issue
+
+on:
+  issues:
+    types:
+      - opened
+      - edited
+      - reopened
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: aircraft-type-issue-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: contains(github.event.issue.labels.*.name, 'aircraft-type-map')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply aircraft type issue
+        run: node scripts/apply-aircraft-type-issue.mjs
+
+      - name: Commit changes
+        id: commit
+        run: |
+          if git diff --quiet -- data/aircraft-types.json package.json index.html app.js; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/aircraft-types.json package.json index.html app.js
+          git commit -m "chore: update aircraft type map from issue #${{ github.event.issue.number }}"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on issue
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changed = '${{ steps.commit.outputs.changed }}' === 'true';
+            const status = '${{ job.status }}';
+            const body = status === 'success'
+              ? (changed
+                ? 'Aircraft type map was applied and committed.'
+                : 'Aircraft type map was already up to date.')
+              : 'Aircraft type map automation failed. Check the workflow logs for details.';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
