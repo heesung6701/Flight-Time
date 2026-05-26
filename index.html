@@ -8,41 +8,51 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
   <body>
-    <div class="version-badge" aria-label="version">v0.1.39</div>
+    <div class="version-badge" aria-label="version">v0.1.41</div>
     <main class="app-shell">
-      <section class="topbar">
-        <div>
+      <section id="airlineGate" class="airline-gate">
+        <div class="gate-heading">
           <p class="eyebrow">CPS to Logbook</p>
-          <h1>Flight Time Output</h1>
+          <h1>항공사를 선택하세요</h1>
         </div>
-        <div class="actions">
-          <button id="configButton" type="button" class="secondary-action" title="항공기번호별 기종 설정">Config</button>
-          <button id="printButton" type="button" title="Print output">Print</button>
-        </div>
+        <div id="airlineCards" class="airline-cards" aria-label="항공사 선택"></div>
       </section>
 
-      <section class="workspace">
+      <div id="appWorkspace" hidden>
+        <section class="topbar">
+          <div>
+            <p class="eyebrow">CPS to Logbook</p>
+            <h1>Flight Time Output</h1>
+            <span id="selectedAirlineName" class="airline-current">T'way Air</span>
+          </div>
+          <div class="actions">
+            <label class="airline-switcher">
+              <span>Airline</span>
+              <select id="topbarAirlineSelect" aria-label="항공사 변경"></select>
+            </label>
+            <button id="configButton" type="button" class="secondary-action" title="항공기번호별 기종 설정">Config</button>
+            <button id="printButton" type="button" title="Print output">Print</button>
+          </div>
+        </section>
+
+        <section class="workspace">
         <aside class="panel input-panel">
           <div class="panel-header">
             <h2>Input</h2>
             <span id="loadState">파일 대기 중</span>
           </div>
 
-          <label class="file-button input-load-button">
-            <input id="workbookInput" type="file" accept=".xlsx,.xls,.csv" />
-            <span>파일 불러오기</span>
-          </label>
+          <div class="input-mode-actions" aria-label="입력 방식 선택">
+            <label class="file-button">
+              <input id="workbookInput" type="file" accept=".xlsx,.xls,.csv" />
+              <span>파일 불러오기</span>
+            </label>
+            <button id="manualInputButton" class="secondary" type="button">직접 입력</button>
+          </div>
+          <p class="input-mode-help">파일 업로드 또는 직접 입력 중 하나를 선택하세요.</p>
 
-          <label class="field">
-            <span>붙여넣기</span>
-            <textarea
-              id="pasteArea"
-              placeholder="CPS 엑셀의 입력 영역을 복사해서 붙여넣을 수 있습니다. 파일 업로드가 가능하면 이 칸은 비워도 됩니다."
-            ></textarea>
-          </label>
           <div class="input-actions">
             <button id="clearDataButton" class="secondary ghost" type="button">Clear</button>
-            <button id="parsePasteButton" class="secondary" type="button">붙여넣은 데이터 적용</button>
           </div>
 
           <div class="stats-grid">
@@ -163,7 +173,8 @@
             </table>
           </div>
         </section>
-      </section>
+        </section>
+      </div>
     </main>
 
     <template id="emptyRowTemplate">
@@ -200,6 +211,29 @@
       </form>
     </dialog>
 
-    <script type="module" src="./app.js?v=0.1.39"></script>
+    <dialog id="manualInputDialog" class="manual-input-dialog" aria-labelledby="manualInputDialogTitle">
+      <form method="dialog" class="manual-input-card">
+        <div class="config-header">
+          <div>
+            <p class="eyebrow">Direct Input</p>
+            <h2 id="manualInputDialogTitle">직접 입력</h2>
+          </div>
+          <button id="closeManualInputButton" type="button" class="icon-button" aria-label="닫기">×</button>
+        </div>
+        <p class="manual-input-help">
+          CPS 엑셀의 original 영역을 CSV 또는 탭으로 구분된 텍스트로 붙여넣으세요.
+          파일을 불러온 데이터가 이미 있으면 직접 입력 내용으로 대체됩니다.
+        </p>
+        <label class="field">
+          <span>CSV 입력</span>
+          <textarea id="pasteArea" placeholder="A/C No,Date,Duty,Flight No,From,To,..."></textarea>
+        </label>
+        <div class="manual-input-actions">
+          <button id="parsePasteButton" type="button">적용</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="./app.js?v=0.1.41"></script>
   </body>
 </html>

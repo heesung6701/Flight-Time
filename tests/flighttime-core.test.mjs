@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
+import { DEFAULT_AIRLINE_ID, getAirline } from "../src/core/airlines.js";
 import {
   buildOutputPage,
   buildValidationReport,
@@ -43,7 +44,35 @@ test("shows the package version in a screen corner", () => {
 
 test("cache-busts browser modules with the package version", () => {
   assert.match(indexHtml, new RegExp(`src="\\./app\\.js\\?v=${packageJson.version}"`));
+  assert.match(appJs, new RegExp(`from "\\./src/core/airlines\\.js\\?v=${packageJson.version}"`));
   assert.match(appJs, new RegExp(`from "\\./src/core/flighttime-core\\.js\\?v=${packageJson.version}"`));
+});
+
+test("starts from airline selection and keeps topbar airline switching available", () => {
+  assert.match(indexHtml, /id="airlineGate"/);
+  assert.match(indexHtml, /id="airlineCards"/);
+  assert.match(indexHtml, /id="appWorkspace" hidden/);
+  assert.match(indexHtml, /id="topbarAirlineSelect"/);
+  assert.match(appJs, /flightTimeSelectedAirline/);
+  assert.match(appJs, /chooseAirline/);
+});
+
+test("separates file upload from direct input in a dialog", () => {
+  assert.match(indexHtml, /id="workbookInput"/);
+  assert.match(indexHtml, /id="manualInputButton"/);
+  assert.match(indexHtml, /id="manualInputDialog"/);
+  assert.match(indexHtml, /id="pasteArea"/);
+  assert.match(indexHtml, /CSV 입력/);
+  assert.match(appJs, /openManualInputDialog/);
+  assert.match(appJs, /closeManualInputDialog/);
+});
+
+test("defines T'way as the default airline output rule set", () => {
+  const tway = getAirline(DEFAULT_AIRLINE_ID);
+
+  assert.equal(tway.id, "tway");
+  assert.deepEqual(tway.excludedDuties, ["O", "EX", "2F"]);
+  assert.equal(tway.credit.blockTime({ duty: "NF", blockTime: 91 }), 61);
 });
 
 test("requests and caches sunrise/sunset times in UTC", () => {

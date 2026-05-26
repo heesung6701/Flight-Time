@@ -1,7 +1,9 @@
+import { DEFAULT_AIRLINE_ID, getAirline } from "./airlines.js";
+
 export const DEFAULT_PAGE_SIZE = 19;
 export const PAGE_SIZE_OPTIONS = [19];
 export const ALL_PAGE_SIZE = "all";
-export const DEFAULT_EXCLUDED_DUTIES = ["O", "EX", "2F"];
+export const DEFAULT_EXCLUDED_DUTIES = getAirline(DEFAULT_AIRLINE_ID).excludedDuties;
 
 export function normalizePageSize(value, rowCount = DEFAULT_PAGE_SIZE) {
   if (String(value).toLowerCase() === ALL_PAGE_SIZE) {
@@ -284,21 +286,34 @@ export function filterRows(originalRows, excludedDuties = DEFAULT_EXCLUDED_DUTIE
   return originalRows.filter((row) => !excluded.has(row.duty.toUpperCase()));
 }
 
-export function calculateCreditedBlockTime(row) {
+export function airlineRules(options = {}) {
+  return options.airline || getAirline(options.airlineId);
+}
+
+export function calculateCreditedBlockTime(row, options = {}) {
+  const rules = airlineRules(options);
+  if (typeof rules.credit?.blockTime === "function") return rules.credit.blockTime(row);
   const duty = row.duty.toUpperCase();
   if (duty === "NF") return row.blockTime ? Math.round(row.blockTime * (2 / 3)) : "";
   return row.blockTime || "";
 }
 
-export function calculateFoTime(row) {
+export function calculateFoTime(row, options = {}) {
+  const rules = airlineRules(options);
+  if (typeof rules.credit?.foTime === "function") {
+    return rules.credit.foTime(row, {
+      calculateCreditedBlockTime: (sourceRow) => calculateCreditedBlockTime(sourceRow, options),
+    });
+  }
   const duty = row.duty.toUpperCase();
-  if (duty === "F" || duty === "NF") return calculateCreditedBlockTime(row);
+  if (duty === "F" || duty === "NF") return calculateCreditedBlockTime(row, options);
   return "";
 }
 
 export function modifyRows(originalRows, options = {}) {
   const pageSize = options.pageSize || DEFAULT_PAGE_SIZE;
-  const excludedDuties = options.excludedDuties || DEFAULT_EXCLUDED_DUTIES;
+  const rules = airlineRules(options);
+  const excludedDuties = options.excludedDuties || rules.excludedDuties || DEFAULT_EXCLUDED_DUTIES;
   const rows = filterRows(originalRows, excludedDuties);
 
   return rows.map((row, index) => {
@@ -321,9 +336,9 @@ export function modifyRows(originalRows, options = {}) {
       nightCondition: row.night || "",
       actualInst: row.inst || "",
       instApp: "",
-      blockTime: calculateCreditedBlockTime(row),
+      blockTime: calculateCreditedBlockTime(row, { ...options, airline: rules }),
       pic: "",
-      fo: calculateFoTime(row),
+      fo: calculateFoTime(row, { ...options, airline: rules }),
       otherPilot: "",
       simulator: "",
       flightInstructor: "",
@@ -379,7 +394,8 @@ export function buildOutputPage(modifiedRows, page, pageSize = DEFAULT_PAGE_SIZE
 }
 
 export function buildValidationReport(originalRows, options = {}) {
-  const excludedDuties = options.excludedDuties || DEFAULT_EXCLUDED_DUTIES;
+  const rules = airlineRules(options);
+  const excludedDuties = options.excludedDuties || rules.excludedDuties || DEFAULT_EXCLUDED_DUTIES;
   const dutyCounts = {};
   for (const row of originalRows) {
     dutyCounts[row.duty || "(blank)"] = (dutyCounts[row.duty || "(blank)"] || 0) + 1;

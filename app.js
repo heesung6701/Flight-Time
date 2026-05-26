@@ -1,4 +1,9 @@
 import {
+  DEFAULT_AIRLINE_ID,
+  airlineOptions,
+  getAirline,
+} from "./src/core/airlines.js?v=0.1.41";
+import {
   DEFAULT_PAGE_SIZE,
   buildOutputPage,
   airportSunKey,
@@ -17,8 +22,9 @@ import {
   parseOriginalRows,
   parseTsv,
   serializeAircraftTypeMap,
-} from "./src/core/flighttime-core.js?v=0.1.39";
+} from "./src/core/flighttime-core.js?v=0.1.41";
 
+const AIRLINE_STORAGE_KEY = "flightTimeSelectedAirline";
 const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
 const SUN_CACHE_KEY = "flightTimeSunTimesUtcByAirportDate";
@@ -28,6 +34,7 @@ const AIRPORT_DATA_URL = "https://raw.githubusercontent.com/mwgg/Airports/master
 const SUN_API_URL = "https://api.sunrisesunset.io/json";
 
 const state = {
+  airlineId: loadSavedAirlineId(),
   rawOriginalRows: [],
   originalRows: [],
   modifiedRows: [],
@@ -43,7 +50,14 @@ const state = {
 };
 
 const els = {
+  airlineGate: document.querySelector("#airlineGate"),
+  appWorkspace: document.querySelector("#appWorkspace"),
+  airlineCards: document.querySelector("#airlineCards"),
+  selectedAirlineName: document.querySelector("#selectedAirlineName"),
+  topbarAirlineSelect: document.querySelector("#topbarAirlineSelect"),
   workbookInput: document.querySelector("#workbookInput"),
+  manualInputButton: document.querySelector("#manualInputButton"),
+  manualInputDialog: document.querySelector("#manualInputDialog"),
   pasteArea: document.querySelector("#pasteArea"),
   clearDataButton: document.querySelector("#clearDataButton"),
   parsePasteButton: document.querySelector("#parsePasteButton"),
@@ -56,6 +70,7 @@ const els = {
   saveConfigButton: document.querySelector("#saveConfigButton"),
   requestDbUpdateButton: document.querySelector("#requestDbUpdateButton"),
   closeConfigButton: document.querySelector("#closeConfigButton"),
+  closeManualInputButton: document.querySelector("#closeManualInputButton"),
   printButton: document.querySelector("#printButton"),
   loadState: document.querySelector("#loadState"),
   originalCount: document.querySelector("#originalCount"),
@@ -75,6 +90,14 @@ const els = {
   totalBody: document.querySelector("#totalBody"),
   emptyRowTemplate: document.querySelector("#emptyRowTemplate"),
 };
+
+function loadSavedAirlineId() {
+  try {
+    return getAirline(localStorage.getItem(AIRLINE_STORAGE_KEY) || DEFAULT_AIRLINE_ID).id;
+  } catch {
+    return DEFAULT_AIRLINE_ID;
+  }
+}
 
 function rowsFromSheet(sheet) {
   return XLSX.utils.sheet_to_json(sheet, {
@@ -231,6 +254,10 @@ function refreshOriginalRows() {
     aircraftTypes: state.aircraftTypes,
     xlsxDateParser: window.XLSX?.SSF?.parse_date_code,
   });
+}
+
+function selectedAirline() {
+  return getAirline(state.airlineId);
 }
 
 function configCount() {
@@ -394,8 +421,10 @@ function setLoaded(message) {
 }
 
 function buildModifiedRows() {
+  const airline = selectedAirline();
   state.effectivePageSize = normalizePageSize(state.pageSize, state.originalRows.length);
   state.modifiedRows = modifyRows(state.originalRows, {
+    airline,
     pageSize: state.effectivePageSize,
     sunTimesByAirportDate: state.sunTimesByAirportDate,
   });
@@ -404,7 +433,8 @@ function buildModifiedRows() {
 }
 
 function filteredOriginalRows() {
-  return state.originalRows.filter((original) => !["O", "EX", "2F"].includes(original.duty.toUpperCase()));
+  const excluded = new Set((selectedAirline().excludedDuties || []).map((duty) => duty.toUpperCase()));
+  return state.originalRows.filter((original) => !excluded.has(original.duty.toUpperCase()));
 }
 
 function sourceRowForOutputRow(row) {
@@ -480,7 +510,7 @@ function totalTooltip(label, summary, rows, key, formatter = String) {
 
 function renderOutput() {
   buildModifiedRows();
-  const report = buildValidationReport(state.originalRows);
+  const report = buildValidationReport(state.originalRows, { airline: selectedAirline() });
   const page = buildOutputPage(state.modifiedRows, state.currentPage, state.effectivePageSize);
 
   els.originalCount.textContent = report.originalCount;
@@ -534,6 +564,44 @@ function renderOutput() {
   }
 
   renderTotals(page);
+}
+
+function renderAirlineSelector() {
+  const options = airlineOptions();
+  const selected = selectedAirline();
+  if (els.selectedAirlineName) els.selectedAirlineName.textContent = selected.name;
+  if (els.topbarAirlineSelect) {
+    els.topbarAirlineSelect.innerHTML = options.map((airline) => `<option value="${escapeAttr(airline.id)}">${escapeHtml(airline.name)}</option>`).join("");
+    els.topbarAirlineSelect.value = selected.id;
+  }
+  if (els.airlineCards) {
+    els.airlineCards.innerHTML = options
+      .map(
+        (airline) => `
+          <button class="airline-card${airline.id === selected.id ? " is-selected" : ""}" type="button" data-airline-id="${escapeAttr(airline.id)}">
+            <span>${escapeHtml(airline.shortName || airline.name)}</span>
+            <strong>${escapeHtml(airline.outputLabel)}</strong>
+            <small>${escapeHtml(airline.inputLabel)} → ${escapeHtml(airline.outputLabel)}</small>
+          </button>
+        `,
+      )
+      .join("");
+  }
+}
+
+function showLogbook() {
+  els.airlineGate?.setAttribute("hidden", "");
+  els.appWorkspace?.removeAttribute("hidden");
+}
+
+function chooseAirline(airlineId) {
+  const nextAirline = getAirline(airlineId);
+  state.airlineId = nextAirline.id;
+  localStorage.setItem(AIRLINE_STORAGE_KEY, nextAirline.id);
+  state.currentPage = 1;
+  renderAirlineSelector();
+  renderOutput();
+  showLogbook();
 }
 
 function renderTotals(page) {
@@ -610,6 +678,24 @@ function handlePaste() {
   setLoaded(`붙여넣기 적용됨 · config ${configCount()}개`);
   renderOutput();
   refreshSunTimes();
+  closeManualInputDialog();
+}
+
+function openManualInputDialog() {
+  if (typeof els.manualInputDialog.showModal === "function") {
+    els.manualInputDialog.showModal();
+  } else {
+    els.manualInputDialog.setAttribute("open", "");
+  }
+  els.pasteArea.focus();
+}
+
+function closeManualInputDialog() {
+  if (typeof els.manualInputDialog.close === "function") {
+    els.manualInputDialog.close();
+  } else {
+    els.manualInputDialog.removeAttribute("open");
+  }
 }
 
 function handleClearData() {
@@ -646,7 +732,13 @@ els.workbookInput.addEventListener("change", (event) => {
   }
 });
 
+els.airlineCards?.addEventListener("click", (event) => {
+  const card = event.target.closest("[data-airline-id]");
+  if (card) chooseAirline(card.dataset.airlineId);
+});
+els.topbarAirlineSelect?.addEventListener("change", () => chooseAirline(els.topbarAirlineSelect.value));
 els.clearDataButton.addEventListener("click", handleClearData);
+els.manualInputButton.addEventListener("click", openManualInputDialog);
 els.parsePasteButton.addEventListener("click", handlePaste);
 els.configButton.addEventListener("click", openConfigDialog);
 els.saveConfigButton.addEventListener("click", handleConfigSave);
@@ -660,11 +752,17 @@ els.closeConfigButton.addEventListener("click", closeConfigDialog);
 els.configDialog.addEventListener("click", (event) => {
   if (event.target === els.configDialog) closeConfigDialog();
 });
+els.closeManualInputButton.addEventListener("click", closeManualInputDialog);
+els.manualInputDialog.addEventListener("click", (event) => {
+  if (event.target === els.manualInputDialog) closeManualInputDialog();
+});
 els.printButton.addEventListener("click", () => window.print());
 els.prevPage.addEventListener("click", () => changePage(state.currentPage - 1));
 els.nextPage.addEventListener("click", () => changePage(state.currentPage + 1));
 els.pageSizeSelect.addEventListener("change", () => changePageSize(els.pageSizeSelect.value));
 els.pageInput.addEventListener("change", () => changePage(Number(els.pageInput.value || 1)));
+renderAirlineSelector();
+if (localStorage.getItem(AIRLINE_STORAGE_KEY)) showLogbook();
 updateConfigStatus();
 renderOutput();
 loadAircraftTypeDatabase().catch((error) => {

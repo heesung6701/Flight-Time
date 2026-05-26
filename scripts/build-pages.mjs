@@ -10,6 +10,7 @@ const files = [
   "styles.css",
   ".nojekyll",
   "data/aircraft-types.json",
+  "src/core/airlines.js",
   "src/core/flighttime-core.js",
 ];
 
