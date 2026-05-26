@@ -31,6 +31,7 @@ const appJs = fs.readFileSync(new URL("../src/app-controller.js", import.meta.ur
 const appMarkup = fs.readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
 const mainJs = fs.readFileSync(new URL("../src/main.jsx", import.meta.url), "utf8");
 const stylesCss = fs.readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+const issueApiJs = fs.readFileSync(new URL("../api/aircraft-type-issue.js", import.meta.url), "utf8");
 const packageJson = JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 
 const agentRules = fs.readFileSync(new URL("../AGENTS.md", import.meta.url), "utf8");
@@ -143,6 +144,7 @@ test("places input mode buttons in one row at full width", () => {
 });
 
 test("builds a GitHub issue request for local aircraft config deltas", () => {
+  assert.match(appJs, /AIRCRAFT_TYPE_ISSUE_API_URL/);
   assert.match(appJs, /AIRCRAFT_TYPE_ISSUE_URL/);
   assert.match(appJs, /localConfigDelta/);
   assert.match(appJs, /configDraftDelta/);
@@ -151,8 +153,18 @@ test("builds a GitHub issue request for local aircraft config deltas", () => {
   assert.match(appJs, /renderConfigDraftState/);
   assert.match(appJs, /renderConfigDeltaPreview/);
   assert.match(appJs, /Add or update registrations/);
-  assert.match(appJs, /window\.open\(buildDbUpdateIssueUrl\(delta\)/);
+  assert.match(appJs, /createAnonymousDbUpdateIssue/);
+  assert.match(appJs, /window\.open\(fallbackUrl/);
   assert.match(stylesCss, /\.config-delta-row\s*{[^}]*display:\s*flex/s);
+});
+
+test("defines a Vercel function for anonymous aircraft type issue requests", () => {
+  assert.match(issueApiJs, /GITHUB_ISSUE_TOKEN/);
+  assert.match(issueApiJs, /https:\/\/api\.github\.com\/repos\/heesung6701\/Flight-Time\/issues/);
+  assert.match(issueApiJs, /MAX_REQUESTS_PER_HOUR/);
+  assert.match(issueApiJs, /website/);
+  assert.match(issueApiJs, /Submitted anonymously from the Flight Time config popup/);
+  assert.match(issueApiJs, /aircraft-type-map/);
 });
 
 test("parses original rows and removes summary rows", () => {

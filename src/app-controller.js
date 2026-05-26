@@ -29,6 +29,7 @@ const CONFIG_STORAGE_KEY = "flightTimeAircraftTypes";
 const AIRPORT_CACHE_KEY = "flightTimeAirportsByIata";
 const SUN_CACHE_KEY = "flightTimeSunTimesUtcByAirportDate";
 const AIRCRAFT_TYPE_DB_URL = "./data/aircraft-types.json";
+const AIRCRAFT_TYPE_ISSUE_API_URL = "/api/aircraft-type-issue";
 const AIRCRAFT_TYPE_ISSUE_URL = "https://github.com/heesung6701/Flight-Time/issues/new";
 const AIRPORT_DATA_URL = "https://raw.githubusercontent.com/mwgg/Airports/master/airports.json";
 const SUN_API_URL = "https://api.sunrisesunset.io/json";
@@ -384,10 +385,42 @@ function buildDbUpdateIssueUrl(delta = currentConfigDelta()) {
   return `${AIRCRAFT_TYPE_ISSUE_URL}?${params.toString()}`;
 }
 
-function handleDbUpdateRequest() {
+async function createAnonymousDbUpdateIssue(delta) {
+  const response = await fetch(AIRCRAFT_TYPE_ISSUE_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      rows: delta.map(([registration, aircraftType]) => ({ registration, aircraftType })),
+      website: "",
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || "GitHub issue 생성에 실패했습니다");
+  }
+  return payload;
+}
+
+async function handleDbUpdateRequest() {
   const delta = currentConfigDelta();
   if (!delta.length) return;
-  window.open(buildDbUpdateIssueUrl(delta), "_blank", "noopener");
+  const fallbackUrl = buildDbUpdateIssueUrl(delta);
+  els.requestDbUpdateButton.disabled = true;
+  els.requestDbUpdateButton.textContent = "요청 중...";
+  try {
+    const issue = await createAnonymousDbUpdateIssue(delta);
+    setLoaded(`DB 업데이트 요청 생성됨${issue.number ? ` (#${issue.number})` : ""}`);
+    if (issue.url) window.open(issue.url, "_blank", "noopener");
+  } catch (error) {
+    console.warn("Anonymous aircraft type issue request failed; opening GitHub fallback", error);
+    setLoaded("익명 요청 실패 · GitHub 이슈 작성 화면을 엽니다");
+    window.open(fallbackUrl, "_blank", "noopener");
+  } finally {
+    els.requestDbUpdateButton.textContent = "DB 업데이트 요청";
+    updateConfigStatus();
+  }
 }
 
 function escapeHtml(value) {

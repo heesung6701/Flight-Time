@@ -52,6 +52,17 @@ HL8211 A332
 
 자동화가 실행되면 `data/aircraft-types.json`이 업데이트되고, 변경 커밋이 생성됩니다. 완료 후 이슈 댓글에 추가/수정/삭제 내역과 최종 맵이 남고 이슈가 닫힙니다.
 
+### Config 팝업 익명 요청
+
+Vercel 배포에서는 Config 팝업의 `DB 업데이트 요청` 버튼이 `/api/aircraft-type-issue` 서버리스 함수로 익명 요청을 보냅니다. 이 함수가 GitHub Issue를 만들려면 Vercel project 환경변수에 `GITHUB_ISSUE_TOKEN`을 설정해야 합니다.
+
+토큰은 GitHub fine-grained personal access token을 권장합니다.
+
+- Repository access: `heesung6701/Flight-Time`
+- Repository permissions: `Issues: Read and write`
+
+토큰이 없거나 API 요청이 실패하면 앱은 기존처럼 GitHub Issue 작성 화면을 새 탭으로 엽니다.
+
 ### 항공기 타입 삭제
 
 1. GitHub 저장소에서 `Issues` 메뉴를 엽니다.
