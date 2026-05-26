@@ -1,45 +1,46 @@
 # Flight-Time
 
-Flight Time Logbook is a static web app that converts CPS `original` flight log data into a paged logbook output.
+Flight Time Logbook은 CPS `original` 비행 로그 데이터를 logbook 출력 형식으로 변환하는 정적 웹앱입니다.
 
-## Local Run
+업로드한 비행 데이터는 브라우저 안에서만 처리되며, 서버로 전송하지 않습니다.
+
+## 로컬 실행
 
 ```bash
 python3 -m http.server 4173
 ```
 
-Then open:
+브라우저에서 아래 주소를 엽니다.
 
 ```text
 http://127.0.0.1:4173
 ```
 
-## Test
+## 테스트
 
 ```bash
 npm test
 ```
 
-## Aircraft Type Map Updates
+## 항공기 타입 맵 업데이트
 
-The app loads the default aircraft registration to type map from:
+앱은 기본 항공기번호 -> 항공기 타입 맵을 아래 파일에서 불러옵니다.
 
 ```text
 data/aircraft-types.json
 ```
 
-Non-developers should update this map by creating a GitHub issue, not by editing JSON.
+비개발자는 이 JSON 파일을 직접 수정하지 말고 GitHub Issue를 만들어 업데이트를 요청하면 됩니다. Issue가 생성되면 GitHub Actions가 내용을 읽어 자동으로 JSON을 수정하고 커밋합니다.
 
-### Add or update aircraft types
+### 항공기 타입 추가 또는 수정
 
-1. Open the repository on GitHub.
-2. Go to `Issues`.
-3. Click `New issue`.
-4. Choose `Aircraft type map update`.
-5. Set `Change type` to `Add or update registrations`.
-6. Enter one registration and type per row.
+1. GitHub 저장소에서 `Issues` 메뉴를 엽니다.
+2. `New issue`를 누릅니다.
+3. `Aircraft type map update` 템플릿을 선택합니다.
+4. `Change type`을 `Add or update registrations`로 선택합니다.
+5. `Aircraft type map` 칸에 한 줄에 하나씩 `항공기번호 타입`을 입력합니다.
 
-Example:
+예시:
 
 ```tsv
 HL8513 B73M
@@ -47,17 +48,19 @@ HL8737 B738
 HL8211 A332
 ```
 
-7. Submit the issue.
+6. 이슈를 생성합니다.
 
-The automation will update `data/aircraft-types.json`, commit the change, leave a summary comment, and close the issue when complete.
+자동화가 실행되면 `data/aircraft-types.json`이 업데이트되고, 변경 커밋이 생성됩니다. 완료 후 이슈 댓글에 추가/수정/삭제 내역과 최종 맵이 남고 이슈가 닫힙니다.
 
-### Delete aircraft types
+### 항공기 타입 삭제
 
-1. Create the same `Aircraft type map update` issue.
-2. Set `Change type` to `Delete registrations`.
-3. Enter one registration per row. Do not include aircraft types.
+1. GitHub 저장소에서 `Issues` 메뉴를 엽니다.
+2. `New issue`를 누릅니다.
+3. `Aircraft type map update` 템플릿을 선택합니다.
+4. `Change type`을 `Delete registrations`로 선택합니다.
+5. `Aircraft type map` 칸에 삭제할 항공기번호만 한 줄에 하나씩 입력합니다.
 
-Example:
+예시:
 
 ```tsv
 HL8513
@@ -66,41 +69,47 @@ HL8579
 HL8580
 ```
 
-4. Submit the issue.
+타입은 입력하지 않습니다.
 
-The automation will remove those registrations if they exist, commit the change, leave a summary comment with the final map, and close the issue.
+6. 이슈를 생성합니다.
 
-### How to check the result
+자동화가 실행되면 해당 항공기번호가 맵에서 삭제됩니다. 완료 후 이슈 댓글에 삭제 내역과 최종 맵이 남고 이슈가 닫힙니다.
 
-After the automation runs, check the issue comment. It shows:
+### 처리 결과 확인
 
-- the commit that changed the map
-- added registrations
-- updated registrations
-- deleted registrations
-- the final aircraft type map
+자동화가 끝나면 이슈 댓글에서 결과를 확인할 수 있습니다.
 
-## GitHub Pages Deployment
+댓글에는 다음 내용이 표시됩니다.
 
-This repo includes a GitHub Actions workflow at `.github/workflows/pages.yml`.
+- 변경 커밋 링크
+- 추가된 항공기번호
+- 수정된 항공기번호
+- 삭제된 항공기번호
+- 최종 항공기 타입 맵
 
-To deploy:
+변경할 내용이 이미 반영되어 있으면 새 커밋을 만들지 않고 “already up to date” 댓글만 남깁니다.
 
-1. Push to the `main` branch.
-2. In GitHub, open `Settings -> Pages`.
-3. Set `Source` to `GitHub Actions`.
-4. The workflow runs tests and deploys the static site.
+## GitHub Pages 배포
 
-Expected Pages URL:
+이 저장소는 `.github/workflows/pages.yml` GitHub Actions workflow로 GitHub Pages에 배포됩니다.
+
+배포 절차:
+
+1. `main` 브랜치에 변경사항을 push합니다.
+2. GitHub 저장소의 `Settings -> Pages`로 이동합니다.
+3. `Source`를 `GitHub Actions`로 설정합니다.
+4. workflow가 테스트를 실행한 뒤 정적 사이트를 배포합니다.
+
+예상 Pages 주소:
 
 ```text
 https://heesung6701.github.io/Flight-Time/
 ```
 
-## Notes
+## 참고
 
-- The app is static and runs in the browser.
-- Uploaded flight data is parsed locally in the browser.
-- `original` is the primary flight log input.
-- `data/aircraft-types.json` provides the shared default aircraft type config.
-- Browser-local config overrides can still be entered from the app's Config popup.
+- 이 앱은 정적 웹앱이며 브라우저에서 실행됩니다.
+- 업로드한 비행 데이터는 브라우저 로컬에서 파싱됩니다.
+- `original` 데이터가 주요 비행 로그 입력입니다.
+- `data/aircraft-types.json`은 공통 기본 항공기 타입 config입니다.
+- 앱의 `Config` 팝업에서 브라우저별 local override를 입력할 수 있습니다.
