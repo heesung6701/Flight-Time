@@ -1,8 +1,14 @@
 {
   "schemaVersion": 1,
   "description": "Aircraft registration to aircraft type database. Add registrations under aircraft.",
-  "updatedAt": "2026-05-26T08:33:27.170Z",
+  "updatedAt": "2026-05-26T10:35:25.284Z",
   "aircraft": {
+    "HL0000": {
+      "registration": "HL0000",
+      "aircraftType": "1234",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T10:35:25.283Z"
+    },
     "HL8000": {
       "registration": "HL8000",
       "aircraftType": "B738",
@@ -278,6 +284,12 @@
       "aircraftType": "B73M",
       "source": "GitHub issue",
       "updatedAt": "2026-05-26T08:33:27.170Z"
+    },
+    "SUBMITTED": {
+      "registration": "SUBMITTED",
+      "aircraftType": "ANONYMOUSLY",
+      "source": "GitHub issue",
+      "updatedAt": "2026-05-26T10:35:25.283Z"
     }
   }
 }
