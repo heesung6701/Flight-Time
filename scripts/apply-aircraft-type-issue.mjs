@@ -44,6 +44,12 @@ class IssueInputError extends Error {
   }
 }
 
+function aircraftRowsSection(body) {
+  return section(body, "Aircraft type map")
+    || section(body, "Registrations and aircraft types")
+    || section(body, "Registrations to delete");
+}
+
 function parseRows(text, mode) {
   const rows = [];
   for (const line of stripCodeFence(text).split(/\r?\n/)) {
@@ -129,12 +135,14 @@ async function main() {
   if (!eventPath) throw new Error("GITHUB_EVENT_PATH is required");
 
   const event = JSON.parse(await fs.readFile(eventPath, "utf8"));
-  const body = event?.issue?.body || "";
+  const issue = event?.issue || {};
+  const body = issue.body || "";
+  const title = issue.title || "";
   const changeType = section(body, "Change type");
-  const mode = /delete/i.test(changeType) ? "delete" : "upsert";
+  const mode = /delete/i.test(`${title}\n${changeType}`) ? "delete" : "upsert";
   let rows;
   try {
-    rows = parseRows(section(body, "Aircraft type map"), mode);
+    rows = parseRows(aircraftRowsSection(body), mode);
   } catch (error) {
     if (error instanceof IssueInputError) {
       await writeSummary({

@@ -1,0 +1,28 @@
+name: Aircraft type map add/update
+description: Add or update aircraft registration to type mappings.
+title: "[aircraft-type-map] Add/update "
+labels:
+  - aircraft-type-map
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when you want to **add new aircraft registrations** or **change the aircraft type for existing registrations**.
+
+        Enter one registration and one aircraft type per row. Separate them with a tab, space, or comma.
+  - type: textarea
+    id: aircraft_type_map
+    attributes:
+      label: Registrations and aircraft types
+      description: |
+        Format: `registration aircraft-type`
+
+        Example rows:
+        `HL8513 B73M`
+        `HL8514 A321`
+      placeholder: |
+        HL8513 B73M
+        HL8514 A321
+      render: tsv
+    validations:
+      required: true

@@ -228,11 +228,15 @@ jobs:
               .filter((line) => !line.trim().startsWith('```'))
               .join('\n')
               .trim();
+            const aircraftRowsSection = (body) => section(body, 'Aircraft type map')
+              || section(body, 'Registrations and aircraft types')
+              || section(body, 'Registrations to delete');
             const normalizeRegistration = (value) => String(value || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
             const normalizeAircraftType = (value) => String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-            const invalidReason = (body) => {
-              const mode = /delete/i.test(section(body, 'Change type')) ? 'delete' : 'upsert';
-              const rows = stripCodeFence(section(body, 'Aircraft type map')).split(/\r?\n/);
+            const invalidReason = (issue) => {
+              const body = issue.body || '';
+              const mode = /delete/i.test(`${issue.title || ''}\n${section(body, 'Change type')}`) ? 'delete' : 'upsert';
+              const rows = stripCodeFence(aircraftRowsSection(body)).split(/\r?\n/);
               let found = false;
               for (const line of rows) {
                 const trimmed = line.trim();
@@ -272,7 +276,7 @@ jobs:
             });
             for (const issue of issues) {
               if (issue.pull_request) continue;
-              const reason = invalidReason(issue.body || '');
+              const reason = invalidReason(issue);
               if (!reason) continue;
               const comments = await github.paginate(github.rest.issues.listComments, {
                 owner: context.repo.owner,

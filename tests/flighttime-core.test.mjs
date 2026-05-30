@@ -247,16 +247,19 @@ test("does not expose a client-side aircraft lookup API key", () => {
 });
 
 test("defines an aircraft type map issue automation", () => {
-  const issueTemplate = fs.readFileSync(new URL("../.github/ISSUE_TEMPLATE/aircraft-type-map.yml", import.meta.url), "utf8");
+  const addUpdateIssueTemplate = fs.readFileSync(new URL("../.github/ISSUE_TEMPLATE/aircraft-type-map-add-update.yml", import.meta.url), "utf8");
+  const deleteIssueTemplate = fs.readFileSync(new URL("../.github/ISSUE_TEMPLATE/aircraft-type-map-delete.yml", import.meta.url), "utf8");
   const workflow = fs.readFileSync(new URL("../.github/workflows/apply-aircraft-type-issue.yml", import.meta.url), "utf8");
   const script = fs.readFileSync(new URL("../scripts/apply-aircraft-type-issue.mjs", import.meta.url), "utf8");
 
-  assert.match(issueTemplate, /aircraft-type-map/);
-  assert.match(issueTemplate, /Change type/);
-  assert.match(issueTemplate, /Aircraft type map/);
-  assert.match(issueTemplate, /Enter one registration and one aircraft type per row/);
-  assert.match(issueTemplate, /Enter only one registration per row/);
-  assert.match(issueTemplate, /Do not paste the example labels/);
+  assert.match(addUpdateIssueTemplate, /aircraft-type-map/);
+  assert.match(addUpdateIssueTemplate, /Add or update/);
+  assert.match(addUpdateIssueTemplate, /Registrations and aircraft types/);
+  assert.match(addUpdateIssueTemplate, /Enter one registration and one aircraft type per row/);
+  assert.match(deleteIssueTemplate, /aircraft-type-map-delete/);
+  assert.match(deleteIssueTemplate, /Registrations to delete/);
+  assert.match(deleteIssueTemplate, /Enter only one registration per row/);
+  assert.doesNotMatch(deleteIssueTemplate, /HL8513 B73M/);
   assert.match(workflow, /issues:/);
   assert.match(workflow, /aircraft-type-map/);
   assert.match(workflow, /Detect and label aircraft type issue/);
@@ -277,6 +280,9 @@ test("defines an aircraft type map issue automation", () => {
   assert.doesNotMatch(workflow, /app\.js/);
   assert.match(script, /GITHUB_EVENT_PATH/);
   assert.match(script, /IssueInputError/);
+  assert.match(script, /aircraftRowsSection/);
+  assert.match(script, /Registrations and aircraft types/);
+  assert.match(script, /Registrations to delete/);
   assert.match(script, /invalidInput: true/);
   assert.match(script, /bumpAppVersion/);
   assert.match(script, /packageLockPath/);

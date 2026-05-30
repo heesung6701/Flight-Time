@@ -8,7 +8,8 @@ This document defines the GitHub Issue based workflow for adding, updating, and 
 
 Current implementation:
 
-- `.github/ISSUE_TEMPLATE/aircraft-type-map.yml`
+- `.github/ISSUE_TEMPLATE/aircraft-type-map-add-update.yml`
+- `.github/ISSUE_TEMPLATE/aircraft-type-map-delete.yml`
 - `.github/workflows/apply-aircraft-type-issue.yml`
 - `scripts/apply-aircraft-type-issue.mjs`
 - `data/aircraft-types.json`
@@ -41,16 +42,19 @@ Directly editing `data/aircraft-types.json` is error-prone for non-developers be
 
 ## 5. Issue Form
 
-Users create an issue from the **Aircraft type map update** template.
+Users create an issue from one of two purpose-specific templates:
+
+- **Aircraft type map add/update** for adding new registrations or changing aircraft types.
+- **Aircraft type map delete** for removing registrations.
 
 Fields:
 
-| Field | Purpose |
-|---|---|
-| Change type | Selects `Add or update registrations` or `Delete registrations`. |
-| Aircraft type map | Contains the rows to apply. |
+| Template | Field | Purpose |
+|---|---|---|
+| Aircraft type map add/update | Registrations and aircraft types | Contains `registration type` rows to add/update. |
+| Aircraft type map delete | Registrations to delete | Contains registration-only rows to remove. |
 
-The template applies or creates the `aircraft-type-map` label through the workflow. The workflow also recognizes matching issues by title prefix `[aircraft-type-map]` or the `### Aircraft type map` body section, so the automation can still run if GitHub does not attach the label immediately.
+The templates apply the `aircraft-type-map` label. The workflow also recognizes matching issues by title prefix `[aircraft-type-map]` / `[aircraft-type-map-delete]` or known row section headings, so the automation can still run if GitHub does not attach the label immediately.
 
 ## 6. Input Format
 
@@ -100,8 +104,8 @@ For add/update, each row must include both registration and aircraft type. For d
 6. If no data changed, the workflow comments that the map is already up to date and does not close the issue.
 7. If data changed, the script bumps the app patch version and syncs:
    - `package.json`
+   - `package-lock.json`
    - `index.html`
-   - `src/app-controller.js`
 8. The workflow commits and pushes the changed files.
 9. The workflow comments with the commit link, change summary, and final map.
 10. The workflow closes the issue with `completed` state reason.
@@ -112,8 +116,8 @@ The workflow commits only:
 
 - `data/aircraft-types.json`
 - `package.json`
+- `package-lock.json`
 - `index.html`
-- `src/app-controller.js`
 
 The workflow must not commit private flight data, original spreadsheets, fixtures, or ignored files.
 

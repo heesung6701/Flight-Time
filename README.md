@@ -36,9 +36,8 @@ data/aircraft-types.json
 
 1. GitHub 저장소에서 `Issues` 메뉴를 엽니다.
 2. `New issue`를 누릅니다.
-3. `Aircraft type map update` 템플릿을 선택합니다.
-4. `Change type`을 `Add or update registrations`로 선택합니다.
-5. `Aircraft type map` 칸에 한 줄에 하나씩 `항공기번호 타입`을 입력합니다.
+3. `Aircraft type map add/update` 템플릿을 선택합니다.
+4. `Registrations and aircraft types` 칸에 한 줄에 하나씩 `항공기번호 타입`을 입력합니다.
 
 예시:
 
@@ -48,7 +47,7 @@ HL8737 B738
 HL8211 A332
 ```
 
-6. 이슈를 생성합니다.
+5. 이슈를 생성합니다.
 
 자동화가 실행되면 `data/aircraft-types.json`이 업데이트되고, 변경 커밋이 생성됩니다. 완료 후 이슈 댓글에 추가/수정/삭제 내역과 최종 맵이 남고 이슈가 닫힙니다.
 
@@ -67,9 +66,8 @@ Vercel 배포에서는 Config 팝업의 `DB 업데이트 요청` 버튼이 `/api
 
 1. GitHub 저장소에서 `Issues` 메뉴를 엽니다.
 2. `New issue`를 누릅니다.
-3. `Aircraft type map update` 템플릿을 선택합니다.
-4. `Change type`을 `Delete registrations`로 선택합니다.
-5. `Aircraft type map` 칸에 삭제할 항공기번호만 한 줄에 하나씩 입력합니다.
+3. `Aircraft type map delete` 템플릿을 선택합니다.
+4. `Registrations to delete` 칸에 삭제할 항공기번호만 한 줄에 하나씩 입력합니다.
 
 예시:
 
@@ -82,7 +80,7 @@ HL8580
 
 타입은 입력하지 않습니다.
 
-6. 이슈를 생성합니다.
+5. 이슈를 생성합니다.
 
 자동화가 실행되면 해당 항공기번호가 맵에서 삭제됩니다. 완료 후 이슈 댓글에 삭제 내역과 최종 맵이 남고 이슈가 닫힙니다.
 

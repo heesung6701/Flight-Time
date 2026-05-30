@@ -1,0 +1,28 @@
+name: Aircraft type map delete
+description: Delete aircraft registration to type mappings.
+title: "[aircraft-type-map-delete] Delete "
+labels:
+  - aircraft-type-map
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when you want to **remove registrations** from `data/aircraft-types.json`.
+
+        Enter only one registration per row. Do not include aircraft types in this form.
+  - type: textarea
+    id: aircraft_type_map
+    attributes:
+      label: Registrations to delete
+      description: |
+        Format: `registration`
+
+        Example rows:
+        `HL8513`
+        `HL8514`
+      placeholder: |
+        HL8513
+        HL8514
+      render: tsv
+    validations:
+      required: true
