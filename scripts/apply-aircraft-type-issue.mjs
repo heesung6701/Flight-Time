@@ -37,6 +37,13 @@ function stripCodeFence(text) {
     .trim();
 }
 
+class IssueInputError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "IssueInputError";
+  }
+}
+
 function parseRows(text, mode) {
   const rows = [];
   for (const line of stripCodeFence(text).split(/\r?\n/)) {
@@ -47,11 +54,11 @@ function parseRows(text, mode) {
     const aircraftType = normalizeAircraftType(typeValue);
     if (!registration) continue;
     if (mode !== "delete" && !aircraftType) {
-      throw new Error(`Missing aircraft type for ${registration}`);
+      throw new IssueInputError(`Missing aircraft type for ${registration}`);
     }
     rows.push({ registration, aircraftType });
   }
-  if (!rows.length) throw new Error("No aircraft registrations found in issue body");
+  if (!rows.length) throw new IssueInputError("No aircraft registrations found in issue body");
   return rows;
 }
 
@@ -125,7 +132,19 @@ async function main() {
   const body = event?.issue?.body || "";
   const changeType = section(body, "Change type");
   const mode = /delete/i.test(changeType) ? "delete" : "upsert";
-  const rows = parseRows(section(body, "Aircraft type map"), mode);
+  let rows;
+  try {
+    rows = parseRows(section(body, "Aircraft type map"), mode);
+  } catch (error) {
+    if (error instanceof IssueInputError) {
+      await writeSummary({
+        invalidInput: true,
+        error: error.message,
+        mode,
+      });
+    }
+    throw error;
+  }
 
   const db = {
     ...emptyDb(),

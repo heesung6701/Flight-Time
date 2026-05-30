@@ -262,12 +262,17 @@ test("defines an aircraft type map issue automation", () => {
   assert.match(workflow, /addLabels/);
   assert.match(workflow, /Resolve issue/);
   assert.match(workflow, /state_reason: 'completed'/);
+  assert.match(workflow, /state_reason: 'not_planned'/);
+  assert.match(workflow, /summary\.invalidInput/);
+  assert.match(workflow, /입력 형식 오류/);
   assert.match(workflow, /steps\.commit\.outputs\.sha/);
   assert.match(workflow, /Final map/);
   assert.match(workflow, /aircraft-type-issue-summary\.json/);
   assert.match(workflow, /data\/aircraft-types\.json package\.json package-lock\.json index\.html/);
   assert.doesNotMatch(workflow, /app\.js/);
   assert.match(script, /GITHUB_EVENT_PATH/);
+  assert.match(script, /IssueInputError/);
+  assert.match(script, /invalidInput: true/);
   assert.match(script, /bumpAppVersion/);
   assert.match(script, /packageLockPath/);
   assert.match(script, /indexPath/);
