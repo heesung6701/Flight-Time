@@ -8,8 +8,17 @@ body:
     attributes:
       value: |
         Use this form to update `data/aircraft-types.json`.
-        For add/update, enter one `registration type` pair per row.
-        For delete, enter one registration per row.
+
+        **Add or update registrations**
+        - Choose **Add or update registrations** above.
+        - Enter one registration and one aircraft type per row.
+        - Separate the registration and aircraft type with a tab, space, or comma.
+        - Example: `HL8513 B73M`
+
+        **Delete registrations**
+        - Choose **Delete registrations** above.
+        - Enter only one registration per row. Do not include an aircraft type.
+        - Example: `HL8513`
   - type: dropdown
     id: change_type
     attributes:
@@ -25,16 +34,20 @@ body:
     attributes:
       label: Aircraft type map
       description: |
-        Add/update example:
-        `HL8513 B73M`
+        The rows are interpreted based on the Change type selected above.
 
-        Delete example:
+        Add/update rows must include both values:
+        `HL8513 B73M`
+        `HL8514 A321`
+
+        Delete rows must include only the registration:
         `HL8513`
+        `HL8514`
+
+        Do not paste the example labels ("Add/update" or "Delete") into this box.
       placeholder: |
-        HL8513
-        HL8514
-        HL8579
-        HL8580
+        HL8513 B73M
+        HL8514 A321
       render: tsv
     validations:
       required: true
