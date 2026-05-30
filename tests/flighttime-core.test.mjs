@@ -262,6 +262,9 @@ test("defines an aircraft type map issue automation", () => {
   assert.match(workflow, /addLabels/);
   assert.match(workflow, /Resolve issue/);
   assert.match(workflow, /state_reason: 'completed'/);
+  assert.match(workflow, /push:/);
+  assert.match(workflow, /close-invalid-open-issues/);
+  assert.match(workflow, /listForRepo/);
   assert.match(workflow, /state_reason: 'not_planned'/);
   assert.match(workflow, /summary\.invalidInput/);
   assert.match(workflow, /입력 형식 오류/);
